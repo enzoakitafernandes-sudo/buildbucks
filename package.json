@@ -1,0 +1,12 @@
+{
+  "name": "build-vbucks",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Loja Build V-Bucks — site estático com checkout Pix da CentralCart.",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

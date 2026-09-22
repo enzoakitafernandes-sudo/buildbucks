@@ -1,0 +1,33 @@
+node_modules/
+npm-debug.log*
+.env
+.env.*
+.DS_Store
+Thumbs.db
+
+# Configuração local de preview (não vai para o servidor).
+.claude/
+
+# Sobras de outros projetos: nenhum arquivo abaixo é usado pelo site.
+# Eles continuam no seu computador, só ficam fora do deploy (~38 MB a menos).
+# Se algum dia o site passar a usar um deles, apague a linha correspondente.
+assets/feedback/
+assets/features/
+assets/pricing/
+assets/vsn-*.png
+assets/banner.png
+assets/build-scrims-logo.png
+assets/coin.webp
+assets/coin-angle.webp
+assets/feedback-frame.png
+assets/logo.webp
+assets/masters.png
+assets/chakra-*.woff2
+assets/inter.woff2
+assets/brtokens/0d5fe8f92a164ad5.png
+assets/brtokens/53c3f64bf24c6ab8.webp
+assets/brtokens/5fb1e62f1f78e6f1.webp
+assets/brtokens/739748ddbc51f5b5.webp
+assets/brtokens/a550cc8783f90f61.webp
+assets/brtokens/b7bbad37ea9a5edc.webp
+assets/brtokens/fd3c9a614c2421ea.png

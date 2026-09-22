@@ -1,0 +1,189 @@
+/* Original BR Tokens layout. Only the background image is customized. */
+html{scroll-behavior:smooth}section[id]{scroll-margin-top:85px}
+#inicio{background-image:url('./assets/bd-background.png');background-position:center;background-size:cover;background-repeat:no-repeat}
+#inicio>div[style*="background-image"]{display:none}
+nav[aria-label="Navegação principal"]{opacity:1!important;transform:none!important;background:rgba(22,20,17,.94);border-bottom:1px solid #ffffff12;backdrop-filter:blur(14px)}
+.local-mobile-menu{position:fixed;top:76px;left:0;right:0;padding:18px 24px;background:#151515;border-bottom:1px solid #ffffff20;z-index:60}.local-mobile-menu a{display:block;padding:12px;color:#ddd}.local-mobile-menu[hidden]{display:none}
+.local-faq-panel{padding:0 24px 24px;color:#a3a3a3;font-size:14px;line-height:1.7}.local-language{position:absolute;right:180px;top:65px;padding:15px;background:#181818;border:1px solid #ffffff20;border-radius:6px;font-size:13px;z-index:70}.local-language a{display:block;padding:7px}
+.local-faq-panel p{margin:0}.local-faq-panel a{color:#5ce8ff;font-weight:700;text-decoration:underline;text-decoration-color:rgba(92,232,255,.4);text-underline-offset:3px}.local-faq-panel a:hover{color:#b8f8ff}.local-faq-panel ol{margin:0;padding-left:1.25rem}.local-faq-panel li+li{margin-top:.65rem}.local-faq-panel strong{color:#dffaff}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+/* Personalização do hero para a identidade BD V-Bucks. */
+:root{
+  --color-fd-primary:#12c8f4;
+  --color-fd-primary-hover:#5ce8ff;
+  --color-fd-primary-active:#079cc9;
+  --color-fd-primary-foreground:#031017;
+  --color-fd-accent:rgba(18,200,244,.2);
+  --color-fd-accent-foreground:#70ecff;
+  --color-fd-ring:#31ddff;
+  --color-gold-1:#08aeea;
+  --color-gold-2:#26ddff;
+  --color-gold-3:#b8f8ff;
+  --gradient-gold:linear-gradient(105deg,#078ed8 0%,#16c9f3 42%,#8df4ff 72%,#e8fdff 100%);
+}
+nav[aria-label="Navegação principal"]{background:rgba(5,11,17,.94)}
+.text-gradient{background:linear-gradient(90deg,#078ed8,#21d8fa,#b8f8ff,#159ee8,#078ed8) 0 0/250%!important;-webkit-background-clip:text!important;background-clip:text!important}
+#inicio .orb-1{background:rgba(0,174,239,.28)!important;filter:blur(140px)!important}
+#inicio .orb-2{background:rgba(38,221,255,.22)!important;filter:blur(120px)!important}
+#inicio .bg-gold-2\/25{background:rgba(38,221,255,.27)!important}
+.coin-glow{box-shadow:0 0 40px rgba(38,221,255,.34),0 0 90px rgba(8,174,234,.22)!important}
+.badge-shimmer{background:linear-gradient(90deg,rgba(8,174,234,.08),rgba(38,221,255,.28) 40%,rgba(184,248,255,.09) 80%) 0 0/200%!important}
+.about-build-section .build-about-logo{filter:none}
+.about-build-section div:has(> .build-about-logo){filter:drop-shadow(0 0 8px rgba(255,255,255,.62)) drop-shadow(0 0 24px rgba(220,245,255,.34))}
+.about-build-section div:has(> img[alt="Logo da Build Scrims"]){background:transparent!important;border:0!important;box-shadow:none!important;clip-path:none!important;overflow:visible!important;filter:none!important}
+.about-build-section img[alt="Logo da Build Scrims"]{padding:0!important;filter:none!important}
+.about-build-section .build-about-title{max-width:46rem;font-size:clamp(1.45rem,3vw,2.25rem)!important}
+.about-build-section .brand-gold{background:linear-gradient(105deg,#d5e3ef 0%,#fff 48%,#c8f5ff 100%)!important}
+.about-build-section .brand-gold:hover{box-shadow:0 0 34px rgba(225,245,255,.42)!important}
+.about-build-section>div:first-child{filter:blur(20px)}
+.hero-brand-logo{max-height:160px;filter:drop-shadow(0 0 18px rgba(255,255,255,.16)) drop-shadow(0 10px 24px rgba(0,0,0,.42))}
+.hero-vbucks-title{max-width:920px!important}
+.hero-vbucks-title>span{display:block}
+.hero-vbucks-gif{display:inline-block;width:.98em;height:.98em;object-fit:contain;vertical-align:-.12em;margin:0 .08em;filter:none;border-radius:50%;clip-path:circle(49% at 50% 50%)}
+.hero-buy-button-label{display:inline-flex!important;align-items:center;gap:.45rem}
+.hero-buy-button-gif{display:block;width:1.15em;height:1.15em;flex:0 0 auto;object-fit:contain;filter:none;border-radius:50%;clip-path:circle(49% at 50% 50%)}
+.hero-silver-coin{filter:drop-shadow(0 0 8px rgba(255,255,255,.86)) drop-shadow(0 0 28px rgba(231,244,255,.52)) drop-shadow(0 18px 30px rgba(255,255,255,.2))!important}
+.hero-silver-coin-left{transform:rotate(-7deg)}
+.hero-silver-coin-right{transform:rotate(6deg)}
+@media(max-width:767px){.hero-brand-logo{max-height:116px;max-width:210px!important}.hero-vbucks-title{font-size:1.75rem!important;line-height:1.08!important}.hero-vbucks-gif{width:.9em;height:.9em}.hero-silver-coin{filter:drop-shadow(0 0 6px rgba(255,255,255,.72)) drop-shadow(0 0 18px rgba(231,244,255,.42))!important}}
+
+/* Catálogo de V-Bucks. */
+.vbucks-shop{position:relative;max-width:64rem;margin:clamp(4.5rem,9vw,7.5rem) auto 0;padding-bottom:clamp(2rem,5vw,4rem)}
+.vbucks-shop::before{content:"";position:absolute;left:50%;top:-2rem;width:min(760px,90vw);height:240px;transform:translateX(-50%);background:radial-gradient(ellipse,rgba(18,200,244,.11),transparent 68%);filter:blur(18px);pointer-events:none}
+.vbucks-shop-heading{position:relative;margin:0 auto 1.9rem;max-width:620px;text-align:center}
+.vbucks-shop-kicker{margin:0 0 .65rem;color:#35dfff;font-family:"Chakra Petch",sans-serif;font-size:.68rem;font-weight:700;letter-spacing:.25em}
+.vbucks-shop-heading h3{margin:0;color:#f7fbff;font-family:"Chakra Petch",sans-serif;font-size:clamp(1.75rem,4vw,2.5rem);font-weight:700;line-height:1;text-transform:uppercase}
+.vbucks-shop-heading h3 span{background:linear-gradient(90deg,#0ea8ea,#5eeeff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.vbucks-shop-heading>p:last-child{margin:.9rem auto 0;color:rgba(255,255,255,.52);font-size:.92rem;line-height:1.6}
+.vbucks-shop-footnote{margin:1.1rem auto 0;max-width:620px;text-align:center;color:rgba(255,255,255,.34);font-size:.68rem;line-height:1.5}
+.vbucks-product-grid{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.9rem}
+.vbucks-product-card{position:relative;display:flex;min-width:0;flex-direction:column;overflow:hidden;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:linear-gradient(165deg,rgba(var(--product-accent-rgb),.09),rgba(9,15,22,.96) 40%,rgba(5,9,14,.98));box-shadow:0 14px 36px rgba(0,0,0,.28);transition:transform .28s ease,border-color .28s ease,box-shadow .28s ease}
+.vbucks-product-card::before{content:"";position:absolute;z-index:2;inset:0 0 auto;height:1px;background:linear-gradient(90deg,transparent,rgba(var(--product-accent-rgb),.6),transparent);pointer-events:none}
+.vbucks-product-card::after{content:"";position:absolute;z-index:2;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 25%,rgba(255,255,255,.035) 48%,transparent 70%);transform:translateX(-105%);transition:transform .65s ease}
+.vbucks-product-card:hover{transform:translateY(-4px);border-color:rgba(var(--product-accent-rgb),.5);box-shadow:0 20px 48px rgba(0,0,0,.4),0 0 28px rgba(var(--product-accent-rgb),.14)}
+.vbucks-product-card:hover::after{transform:translateX(105%)}
+.vbucks-product-visual{position:relative;margin:0;aspect-ratio:1/1;max-height:230px;overflow:hidden;background:#080e13}
+.vbucks-product-visual::after{content:"";position:absolute;inset:auto 0 0;height:38%;background:linear-gradient(transparent,rgba(7,12,18,.55) 50%,rgba(7,12,18,.97));pointer-events:none}
+.vbucks-product-visual img{width:100%;height:100%;object-fit:cover;object-position:50% 0;display:block;transition:transform .55s cubic-bezier(.22,1,.36,1)}
+.vbucks-product-ribbon{position:absolute;z-index:3;top:14px;left:-35px;width:120px;padding:.3rem 0;transform:rotate(-45deg);text-align:center;background:linear-gradient(90deg,#0aa4dd,#3ee3ff);color:#031017;font-family:"Chakra Petch",sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.06em;line-height:1;box-shadow:0 3px 12px rgba(0,0,0,.45);pointer-events:none}
+.vbucks-product-card:hover .vbucks-product-visual img{transform:scale(1.04)}
+.vbucks-product-content{position:relative;z-index:1;display:flex;flex:1;flex-direction:column;margin-top:-1.35rem;padding:0 .95rem .95rem}
+.vbucks-product-badge{align-self:flex-start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:1px solid rgba(var(--product-accent-rgb),.38);border-radius:4px;background:rgba(6,12,18,.92);box-shadow:0 0 16px rgba(var(--product-accent-rgb),.14);color:var(--product-accent);padding:.32rem .55rem;font-family:"Chakra Petch",sans-serif;font-size:.55rem;font-weight:700;letter-spacing:.14em;line-height:1}
+.vbucks-product-content h4{display:flex;flex-wrap:wrap;align-items:baseline;gap:.4rem;margin:.75rem 0 0;color:#fff;font-family:"Chakra Petch",sans-serif;font-size:1.45rem;font-weight:700;letter-spacing:-.02em;line-height:1}
+.vbucks-product-content h4 small{color:rgba(255,255,255,.48);font-size:.6rem;letter-spacing:.16em}
+.vbucks-product-note{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.1rem;margin:.45rem 0 .8rem;color:rgba(255,255,255,.46);font-size:.7rem;line-height:1.5}
+.vbucks-product-price{display:grid;grid-template-columns:1fr auto;align-items:baseline;column-gap:.5rem;row-gap:.4rem;margin-top:auto;padding-top:.7rem;border-top:1px solid rgba(255,255,255,.07)}
+.vbucks-product-price span{color:rgba(255,255,255,.34);font-size:.55rem;font-weight:700;letter-spacing:.16em;white-space:nowrap}
+.vbucks-product-price span:nth-of-type(2){color:rgba(255,255,255,.62)}
+.vbucks-product-price s{color:rgba(255,255,255,.42);font-family:"Chakra Petch",sans-serif;font-size:.76rem;font-weight:600;line-height:1;text-align:right;white-space:nowrap;text-decoration-thickness:1px;text-decoration-color:rgba(255,255,255,.55)}
+.vbucks-product-price strong{color:#fff;font-family:"Chakra Petch",sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:-.01em;line-height:1;text-align:right;white-space:nowrap}
+.vbucks-product-price small{grid-column:1/-1;color:#5ce8ff;font-size:.62rem;font-weight:600;letter-spacing:.02em;text-align:right}
+.vbucks-product-action{display:flex;align-items:center;justify-content:space-between;margin-top:.7rem;padding:.6rem .8rem;border:1px solid rgba(18,200,244,.26);border-radius:8px;background:linear-gradient(105deg,rgba(5,128,186,.2),rgba(23,215,245,.12));color:#e8fbff;font-family:"Chakra Petch",sans-serif;font-size:.68rem;font-weight:700;letter-spacing:.12em;transition:background .22s ease,border-color .22s ease,color .22s ease}
+.vbucks-product-action:hover{border-color:rgba(88,232,255,.65);background:linear-gradient(105deg,#088ed0,#33dff8);color:#021017}
+.vbucks-product-action:focus-visible{outline:2px solid #5ce8ff;outline-offset:3px}
+.vbucks-product-action span:last-child{font-size:.95rem;line-height:1;transition:transform .22s ease}
+.vbucks-product-action:hover span:last-child{transform:translateX(3px)}
+.featured-vbucks-coin-wrap{isolation:isolate}
+.featured-vbucks-coin{transform:rotate(-8deg);filter:drop-shadow(0 12px 14px rgba(0,0,0,.72)) drop-shadow(0 0 10px rgba(34,216,255,.3))}
+@media(max-width:1023px){.vbucks-product-grid{gap:.8rem}.vbucks-product-content{padding:0 .85rem .85rem}.vbucks-product-content h4{font-size:1.3rem}.vbucks-product-ribbon{top:9px;left:-42px;padding:.26rem 0;font-size:.62rem}}
+@media(max-width:719px){.vbucks-product-grid{grid-template-columns:repeat(2,minmax(0,300px));justify-content:center;gap:.9rem}}
+@media(max-width:560px){.vbucks-shop{margin-top:4rem}.vbucks-shop-heading{margin-bottom:1.5rem}.vbucks-product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}.vbucks-product-content{padding:0 .8rem .8rem}.vbucks-product-content h4{font-size:1.2rem}.vbucks-product-price strong{font-size:.95rem}.vbucks-product-price s{font-size:.7rem}}
+@media(max-width:339px){.vbucks-product-grid{grid-template-columns:minmax(0,300px)}.vbucks-product-visual{max-height:none}}
+@media(min-width:768px){.bd-footer-grid{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr)}}
+@media(prefers-reduced-motion:reduce){.vbucks-product-card,.vbucks-product-card::after,.vbucks-product-visual img,.vbucks-product-action,.vbucks-product-action span:last-child{transition:none}.vbucks-product-card:hover{transform:none}}
+
+/* Números da Build. */
+.bd-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;overflow:hidden;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(255,255,255,.07)}
+.bd-stat{position:relative;padding:1.6rem 1.25rem 1.5rem;text-align:center;background:linear-gradient(180deg,rgba(10,17,25,.98),rgba(5,9,14,.99))}
+.bd-stat::before{content:"";position:absolute;left:50%;top:0;width:56%;height:1px;transform:translateX(-50%);background:linear-gradient(90deg,transparent,rgba(18,200,244,.55),transparent)}
+.bd-stat-value{margin:0;color:#fff;font-family:"Chakra Petch",sans-serif;font-size:clamp(1.7rem,3vw,2.3rem);font-weight:700;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+.bd-stat-label{margin:.55rem 0 0;color:#5ce8ff;font-size:.82rem;font-weight:600}
+.bd-stat-note{margin:.2rem 0 0;color:rgba(255,255,255,.45);font-size:.72rem;line-height:1.5}
+@media(max-width:767px){.bd-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.bd-stat{padding:1.3rem 1rem}}
+
+/* Por que a Build. */
+.bd-perks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.9rem}
+.bd-perk{position:relative;overflow:hidden;margin:0;padding:1.5rem 1.35rem 1.6rem;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:linear-gradient(165deg,rgba(18,200,244,.09),rgba(9,15,22,.96) 40%,rgba(5,9,14,.98));box-shadow:0 14px 36px rgba(0,0,0,.28);transition:transform .28s ease,border-color .28s ease,box-shadow .28s ease}
+.bd-perk::before{content:"";position:absolute;inset:0 0 auto;height:1px;background:linear-gradient(90deg,transparent,rgba(18,200,244,.6),transparent)}
+.bd-perk:hover{transform:translateY(-4px);border-color:rgba(18,200,244,.42);box-shadow:0 20px 48px rgba(0,0,0,.4),0 0 28px rgba(18,200,244,.12)}
+.bd-perk-icon{display:flex;align-items:center;justify-content:center;width:3rem;height:3rem;border:1px solid rgba(18,200,244,.24);border-radius:10px;background:rgba(18,200,244,.1);color:#5ce8ff;box-shadow:inset 0 0 18px rgba(18,200,244,.08)}
+.bd-perk-icon svg{width:22px;height:22px}
+.bd-perk h3{margin:1.1rem 0 0;color:#fff;font-family:"Chakra Petch",sans-serif;font-size:1rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;text-wrap:balance}
+.bd-perk p{margin:.55rem 0 0;color:rgba(255,255,255,.55);font-size:.85rem;line-height:1.6}
+@media(max-width:1023px){.bd-perks{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.bd-perks{grid-template-columns:1fr}}
+
+/* Chamada final. */
+.bd-cta-actions{display:flex;flex-direction:column;gap:.75rem;width:100%;flex-shrink:0}
+.bd-cta-actions>a{width:100%}
+@media(min-width:768px){.bd-cta-actions{width:auto;min-width:230px}}
+#cta h2 .text-gradient{white-space:nowrap}
+.bd-cta-coin{position:absolute;right:-1.5rem;bottom:-2.2rem;width:12rem;height:12rem;opacity:.14;pointer-events:none;isolation:isolate}
+@media(max-width:767px){.bd-cta-coin{display:none}}
+
+/* FAQ aberto. */
+#faq .rounded-lg.border.is-open{border-color:rgba(18,200,244,.35);background:rgba(18,200,244,.04)}
+#faq .rounded-lg.border.is-open .lucide-chevron-down{transform:rotate(180deg)}
+#faq .lucide-chevron-down{transition:transform .25s ease}
+
+/* Menu: em tablets o menu completo não cabe; usa o hambúrguer até 960px e compacta os links até 1100px. */
+@media(min-width:768px) and (max-width:959.98px){.bd-nav-desktop{display:none!important}nav[aria-label="Navegação principal"] button[aria-controls="mobile-menu"]{display:flex!important}}
+@media(min-width:960px) and (max-width:1099.98px){.bd-nav-desktop{gap:.75rem!important}.bd-nav-desktop div.p-1>a{padding-left:.6rem;padding-right:.6rem}}
+
+/* Menu: item ativo. */
+nav[aria-label="Navegação principal"] div.p-1>a{transition:background-color .25s ease}
+nav[aria-label="Navegação principal"] div.p-1>a.is-active{background:rgba(18,200,244,.12)}
+nav[aria-label="Navegação principal"] div.p-1>a.is-active>span{color:#fff}
+
+/* Painel de compra (Pix gerado dentro da própria página). */
+.bd-checkout{position:fixed;inset:0;z-index:200;display:flex;padding:1rem;overflow-y:auto;background:rgba(3,8,13,.8);backdrop-filter:blur(6px)}
+.bd-checkout[hidden]{display:none}
+.bd-checkout-card{position:relative;margin:auto;width:100%;max-width:26rem;padding:1.6rem;border:1px solid rgba(18,200,244,.28);border-radius:16px;background:linear-gradient(170deg,rgba(18,200,244,.1),rgba(9,15,22,.98) 42%,rgba(5,9,14,.99));box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.bd-checkout-card::before{content:"";position:absolute;inset:0 0 auto;height:1px;background:linear-gradient(90deg,transparent,rgba(18,200,244,.7),transparent)}
+.bd-checkout-close{position:absolute;top:.7rem;right:.7rem;display:flex;align-items:center;justify-content:center;width:2rem;height:2rem;border:1px solid rgba(255,255,255,.12);border-radius:8px;background:rgba(255,255,255,.04);color:rgba(255,255,255,.6);font-size:1.1rem;line-height:1;cursor:pointer;transition:color .2s ease,border-color .2s ease}
+.bd-checkout-close:hover{color:#fff;border-color:rgba(255,255,255,.3)}
+.bd-checkout-eyebrow{margin:0;color:#35dfff;font-family:"Chakra Petch",sans-serif;font-size:.62rem;font-weight:700;letter-spacing:.22em}
+.bd-checkout-card h2{margin:.5rem 0 0;color:#fff;font-family:"Chakra Petch",sans-serif;font-size:1.35rem;font-weight:700;letter-spacing:-.01em;line-height:1.1;text-transform:uppercase}
+.bd-checkout-price{margin:.35rem 0 0;color:#5ce8ff;font-family:"Chakra Petch",sans-serif;font-size:1.9rem;font-weight:700;line-height:1}
+.bd-checkout-sub{margin:.35rem 0 0;color:rgba(255,255,255,.5);font-size:.78rem;line-height:1.5}
+.bd-checkout-field{display:block;margin-top:1rem}
+.bd-checkout-field span{display:block;margin-bottom:.35rem;color:rgba(255,255,255,.55);font-size:.6rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
+.bd-checkout-field input{width:100%;padding:.7rem .8rem;border:1px solid rgba(255,255,255,.12);border-radius:9px;background:rgba(255,255,255,.04);color:#fff;font-family:inherit;font-size:.9rem}
+.bd-checkout-field input:focus{outline:none;border-color:rgba(18,200,244,.6);box-shadow:0 0 0 3px rgba(18,200,244,.12)}
+.bd-checkout-terms{display:flex;align-items:flex-start;gap:.55rem;margin-top:1rem;color:rgba(255,255,255,.55);font-size:.76rem;line-height:1.5}
+.bd-checkout-terms input{margin-top:.15rem;accent-color:#12c8f4;width:1rem;height:1rem;flex:0 0 auto}
+.bd-checkout-terms a{color:#5ce8ff;text-decoration:underline;text-underline-offset:2px}
+.bd-checkout-submit{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;margin-top:1.2rem;padding:.85rem 1rem;border:0;border-radius:9px;background:var(--gradient-gold);color:#031017;font-family:"Chakra Petch",sans-serif;font-size:.82rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:filter .2s ease}
+.bd-checkout-submit:hover{filter:brightness(1.07)}
+.bd-checkout-submit[disabled]{opacity:.6;cursor:progress}
+.bd-checkout-erro{margin:.9rem 0 0;padding:.6rem .7rem;border:1px solid rgba(255,107,107,.35);border-radius:8px;background:rgba(255,107,107,.08);color:#ffb3b3;font-size:.76rem;line-height:1.5}
+.bd-checkout-erro a{color:#ffd9d9;text-decoration:underline}
+.bd-checkout-qr{display:flex;justify-content:center;margin-top:1.1rem}
+.bd-checkout-qr img{width:13rem;height:13rem;padding:.6rem;border-radius:12px;background:#fff}
+.bd-checkout-copia{width:100%;margin-top:.45rem;padding:.6rem;border:1px solid rgba(255,255,255,.12);border-radius:9px;background:rgba(0,0,0,.35);color:rgba(255,255,255,.75);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.66rem;line-height:1.45;resize:none}
+.bd-checkout-copiar{display:block;width:100%;margin-top:.6rem;padding:.75rem;border:1px solid rgba(50,188,173,.5);border-radius:9px;background:rgba(50,188,173,.16);color:#8ff5e8;font-family:"Chakra Petch",sans-serif;font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .2s ease}
+.bd-checkout-copiar:hover{background:rgba(50,188,173,.28)}
+.bd-checkout-copiar.is-ok{background:#1f8a4c;border-color:#1f8a4c;color:#fff}
+.bd-checkout-status{display:flex;align-items:center;gap:.5rem;margin-top:1rem;padding:.6rem .75rem;border:1px solid rgba(255,255,255,.1);border-radius:9px;background:rgba(255,255,255,.03);color:rgba(255,255,255,.62);font-size:.76rem}
+.bd-checkout-status span:first-child{width:.5rem;height:.5rem;flex:0 0 auto;border-radius:50%;background:#ffc75a;animation:bd-pulse 1.6s ease-in-out infinite}
+.bd-checkout-status.is-pago{border-color:rgba(60,220,130,.4);background:rgba(60,220,130,.1);color:#b7f5cf}
+.bd-checkout-status.is-pago span:first-child{background:#3cdc82;animation:none}
+@keyframes bd-pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.bd-checkout-passos{margin:1.1rem 0 0;padding:.9rem 1rem;border:1px solid rgba(18,200,244,.2);border-radius:12px;background:rgba(18,200,244,.05);color:rgba(255,255,255,.62);font-size:.76rem;line-height:1.6}
+.bd-checkout-passos strong{color:#dffaff}
+.bd-checkout-passos ol{margin:.5rem 0 0;padding-left:1.15rem;list-style:decimal outside}
+.bd-checkout-passos li::marker{color:#5ce8ff;font-weight:700}
+.bd-checkout-passos li+li{margin-top:.35rem}
+.bd-checkout-id{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-top:.7rem;padding:.5rem .65rem;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(0,0,0,.35)}
+.bd-checkout-id code{color:#dffaff;font-size:.78rem;word-break:break-all}
+.bd-checkout-id button{flex:0 0 auto;padding:.3rem .55rem;border:1px solid rgba(255,255,255,.15);border-radius:6px;background:transparent;color:rgba(255,255,255,.7);font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.bd-checkout-id button:hover{color:#fff;border-color:rgba(255,255,255,.35)}
+body.bd-checkout-aberto{overflow:hidden}
+@media(max-width:560px){.bd-checkout-card{padding:1.3rem}.bd-checkout-qr img{width:11rem;height:11rem}}
+@media(prefers-reduced-motion:reduce){.bd-checkout-status span:first-child{animation:none}}
+
+/* Entrada suave (classe aplicada só via JS, abaixo da dobra). */
+.bd-reveal{opacity:0!important;transform:translateY(22px)!important;transition:none!important}
+.bd-reveal.is-visible{opacity:1!important;transform:none!important;transition:opacity .7s ease,transform .7s cubic-bezier(.22,1,.36,1)!important}
+@media(prefers-reduced-motion:reduce){.bd-perk,.bd-perk:hover{transform:none;transition:none}.bd-reveal{opacity:1!important;transform:none!important;transition:none!important}}
