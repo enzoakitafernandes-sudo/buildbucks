@@ -1,10 +1,10 @@
 /* Original BR Tokens layout. Only the background image is customized. */
 html{scroll-behavior:smooth}section[id]{scroll-margin-top:85px}
-#inicio{background-image:url('./assets/bd-background.png');background-position:center;background-size:cover;background-repeat:no-repeat}
+#inicio{background-image:url('./assets/bd-background.webp');background-position:center;background-size:cover;background-repeat:no-repeat}
 #inicio>div[style*="background-image"]{display:none}
 nav[aria-label="Navegação principal"]{opacity:1!important;transform:none!important;background:rgba(22,20,17,.94);border-bottom:1px solid #ffffff12;backdrop-filter:blur(14px)}
 .local-mobile-menu{position:fixed;top:76px;left:0;right:0;padding:18px 24px;background:#151515;border-bottom:1px solid #ffffff20;z-index:60}.local-mobile-menu a{display:block;padding:12px;color:#ddd}.local-mobile-menu[hidden]{display:none}
-.local-faq-panel{padding:0 24px 24px;color:#a3a3a3;font-size:14px;line-height:1.7}.local-language{position:absolute;right:180px;top:65px;padding:15px;background:#181818;border:1px solid #ffffff20;border-radius:6px;font-size:13px;z-index:70}.local-language a{display:block;padding:7px}
+.local-faq-panel{padding:0 24px 24px;color:#a3a3a3;font-size:14px;line-height:1.7}
 .local-faq-panel p{margin:0}.local-faq-panel a{color:#5ce8ff;font-weight:700;text-decoration:underline;text-decoration-color:rgba(92,232,255,.4);text-underline-offset:3px}.local-faq-panel a:hover{color:#b8f8ff}.local-faq-panel ol{margin:0;padding-left:1.25rem}.local-faq-panel li+li{margin-top:.65rem}.local-faq-panel strong{color:#dffaff}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 
