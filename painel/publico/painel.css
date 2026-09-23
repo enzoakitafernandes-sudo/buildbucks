@@ -47,7 +47,7 @@ h1,h2,h3{margin:0;font-weight:700;letter-spacing:-.01em}
 .comissoes{margin-bottom:1.1rem;border:1px solid var(--borda);border-radius:12px;background:var(--cartao);overflow:hidden}
 .comissoes:empty{display:none}
 .comissoes-topo{display:flex;flex-wrap:wrap;align-items:baseline;gap:.6rem;padding:.75rem .9rem;border-bottom:1px solid var(--borda)}
-.comissoes-cabecalho,.comissao-linha{display:grid;grid-template-columns:1fr auto 7rem 7rem;gap:.6rem;align-items:baseline;padding:.5rem .9rem}
+.comissoes-cabecalho,.comissao-linha{display:grid;grid-template-columns:1fr auto 6.5rem 6.5rem 6.5rem;gap:.6rem;align-items:baseline;padding:.5rem .9rem}
 .comissoes-cabecalho{color:var(--suave);font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;border-bottom:1px solid var(--borda)}
 .comissao-linha+.comissao-linha{border-top:1px solid var(--borda)}
 .comissao-linha .nome{font-weight:600;text-transform:capitalize}
@@ -72,6 +72,18 @@ h1,h2,h3{margin:0;font-weight:700;letter-spacing:-.01em}
 .placar-linha .total{color:var(--suave);font-size:.74rem;font-variant-numeric:tabular-nums}
 .placar-linha.eu{background:rgba(18,200,244,.08)}
 .placar-linha.eu .nome{color:var(--ciano-claro)}
+.relatorio{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;border-top:1px solid var(--borda);background:var(--borda)}
+.relatorio-bloco{background:var(--cartao);padding:.7rem .9rem}
+.relatorio-titulo{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem;margin-bottom:.4rem}
+.relatorio-titulo b{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--suave)}
+.relatorio-soma{color:var(--ciano-claro);font-size:.74rem;font-weight:700}
+.relatorio-linha{display:flex;justify-content:space-between;gap:.5rem;padding:.25rem 0;font-size:.82rem}
+.relatorio-linha+.relatorio-linha{border-top:1px solid var(--borda)}
+.relatorio-linha .nome{text-transform:capitalize}
+.relatorio-linha .qtd{font-variant-numeric:tabular-nums;font-weight:700}
+.relatorio-linha.eu .nome{color:var(--ciano-claro)}
+.relatorio .vazio{padding:.4rem 0;text-align:left}
+@media(max-width:560px){.relatorio{grid-template-columns:1fr}}
 
 /* ----- filtros ----- */
 .filtros{display:flex;flex-wrap:wrap;gap:.45rem;margin-bottom:.9rem}

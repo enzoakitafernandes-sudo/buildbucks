@@ -48,42 +48,95 @@ function corpo(req, limite = 4096) {
   });
 }
 
-const mesmoDia = (iso, referencia) =>
-  !!iso && new Date(iso).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) === referencia;
+const FUSO = 'America/Sao_Paulo';
+const centavos = (v) => Math.round(v * 100) / 100;
+/** Data no fuso de São Paulo no formato 2026-09-23, que ordena como texto. */
+const diaDe = (iso) => (iso ? new Date(iso).toLocaleDateString('en-CA', { timeZone: FUSO }) : '');
 
-/** Quem mais entregou: hoje e no total. Só conta pedido concluído. */
+/** Começo do dia, da semana (segunda) e do mês corrente, em São Paulo. */
+function marcos() {
+  const hoje = diaDe(Date.now());
+  const [ano, mes, dia] = hoje.split('-').map(Number);
+  const base = Date.UTC(ano, mes - 1, dia);
+  const diaDaSemana = new Date(base).getUTCDay(); // 0 = domingo
+  const segunda = new Date(base - ((diaDaSemana + 6) % 7) * 86400000).toISOString().slice(0, 10);
+  return { hoje, segunda, mes: hoje.slice(0, 7) };
+}
+
+/** Em quais períodos essa data entra. */
+function periodosDe(iso, m) {
+  const dia = diaDe(iso);
+  if (!dia) return { hoje: false, semana: false, mes: false };
+  return { hoje: dia === m.hoje, semana: dia >= m.segunda, mes: dia.startsWith(m.mes) };
+}
+
+/** Quem mais entregou no período todo, com o recorte de semana e mês. */
 function rankingEntregadores(lista) {
-  const hoje = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+  const m = marcos();
   const por = new Map();
   for (const p of lista) {
     const { estado, por: quem, em } = p.entrega || {};
     if (estado !== 'entregue' || !quem) continue;
-    const reg = por.get(quem) || { entregador: quem, hoje: 0, total: 0, ultima: null };
+    const reg = por.get(quem) || { entregador: quem, total: 0, hoje: 0, semana: 0, mes: 0, ultima: null };
+    const onde = periodosDe(em, m);
     reg.total++;
-    if (mesmoDia(em, hoje)) reg.hoje++;
+    if (onde.hoje) reg.hoje++;
+    if (onde.semana) reg.semana++;
+    if (onde.mes) reg.mes++;
     if (!reg.ultima || Date.parse(em) > Date.parse(reg.ultima)) reg.ultima = em;
     por.set(quem, reg);
   }
-  // Empate no dia decide pelo total, depois por quem entregou mais recentemente.
-  return [...por.values()].sort((a, b) => b.hoje - a.hoje || b.total - a.total || Date.parse(b.ultima) - Date.parse(a.ultima));
+  // Ranking do período todo; empate decide pelo mês, depois por quem entregou por último.
+  return [...por.values()].sort((a, b) => b.total - a.total || b.mes - a.mes || Date.parse(b.ultima) - Date.parse(a.ultima));
 }
 
-/** Quanto cada entregador tem a receber pelas entregas concluídas. */
+/** Quanto cada entregador tem a receber, por período. */
 function comissoesPorEntregador(lista) {
-  const hoje = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+  const m = marcos();
   const por = new Map();
   for (const p of lista) {
     const { estado, por: quem, em } = p.entrega || {};
     if (estado !== 'entregue' || !quem || p.status !== 'APPROVED') continue;
-    const reg = por.get(quem) || { entregador: quem, entregas: 0, comissao: 0, entregasHoje: 0, comissaoHoje: 0 };
+    const reg = por.get(quem) || {
+      entregador: quem, entregas: 0, comissao: 0,
+      entregasSemana: 0, comissaoSemana: 0, entregasMes: 0, comissaoMes: 0,
+    };
+    const onde = periodosDe(em, m);
     reg.entregas++;
     reg.comissao += p.financeiro.comissao;
-    if (mesmoDia(em, hoje)) { reg.entregasHoje++; reg.comissaoHoje += p.financeiro.comissao; }
+    if (onde.semana) { reg.entregasSemana++; reg.comissaoSemana += p.financeiro.comissao; }
+    if (onde.mes) { reg.entregasMes++; reg.comissaoMes += p.financeiro.comissao; }
     por.set(quem, reg);
   }
   return [...por.values()]
-    .map((r) => ({ ...r, comissao: Math.round(r.comissao * 100) / 100, comissaoHoje: Math.round(r.comissaoHoje * 100) / 100 }))
+    .map((r) => ({ ...r, comissao: centavos(r.comissao), comissaoSemana: centavos(r.comissaoSemana), comissaoMes: centavos(r.comissaoMes) }))
     .sort((a, b) => b.comissao - a.comissao);
+}
+
+/** Faturamento, custo, lucro e comissões de cada período (só pedidos pagos). */
+function resumoPorPeriodo(lista) {
+  const m = marcos();
+  const vazio = () => ({ vendas: 0, faturamento: 0, custo: 0, taxas: 0, lucro: 0, comissao: 0, entregues: 0 });
+  const r = { hoje: vazio(), semana: vazio(), mes: vazio(), total: vazio() };
+  for (const p of lista) {
+    if (p.status !== 'APPROVED') continue;
+    const f = p.financeiro;
+    const onde = periodosDe(p.pagoEm || p.criadoEm, m);
+    const entregue = p.entrega?.estado === 'entregue';
+    for (const faixa of ['total', ...(onde.hoje ? ['hoje'] : []), ...(onde.semana ? ['semana'] : []), ...(onde.mes ? ['mes'] : [])]) {
+      r[faixa].vendas++;
+      r[faixa].faturamento += f.venda;
+      r[faixa].custo += f.custo;
+      r[faixa].taxas += f.taxa;
+      r[faixa].lucro += f.lucro;
+      if (entregue) { r[faixa].comissao += f.comissao; r[faixa].entregues++; }
+    }
+  }
+  for (const faixa of Object.values(r)) {
+    for (const campo of ['faturamento', 'custo', 'taxas', 'lucro', 'comissao']) faixa[campo] = centavos(faixa[campo]);
+    faixa.lucroLiquido = centavos(faixa.lucro - faixa.comissao);
+  }
+  return { ...r, referencia: m };
 }
 
 /** Trata a requisição se for dos painéis. Devolve true quando tratou. */
@@ -150,6 +203,7 @@ async function tratar(req, res, caminho) {
       pedidos: lista,
       ranking,
       comissoes: comissoesPorEntregador(lista),
+      periodos: resumoPorPeriodo(lista),
       config: financeiro.configuracao(),
       situacao: dados.situacao(),
       sessao,

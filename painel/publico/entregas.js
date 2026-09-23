@@ -59,29 +59,51 @@ function montar(sessao) {
   setInterval(() => { if (!ocupado) carregar(false); }, 30000);
 }
 
-const MEDALHAS = ['1º', '2º', '3º'];
-
 function desenharPlacar(alvo) {
   alvo.innerHTML = '';
   const cabecalho = el('div', { class: 'placar-topo' }, [
     el('b', { text: 'Ranking de entregas' }),
-    el('span', { class: 'placar-nota', text: 'atualiza sozinho' }),
+    el('span', { class: 'placar-nota', text: 'desde o começo · atualiza sozinho' }),
   ]);
   const linhas = el('div', { class: 'placar-linhas' });
 
   if (!ranking.length) {
     linhas.append(el('p', { class: 'vazio', text: 'Nenhuma entrega concluída ainda. O primeiro a entregar abre o ranking.' }));
-  } else {
-    ranking.forEach((r, i) => {
-      linhas.append(el('div', { class: 'placar-linha' + (r.entregador === euSou ? ' eu' : '') + (i < 3 ? ' podio' : '') }, [
-        el('span', { class: 'posicao', text: MEDALHAS[i] || `${i + 1}º` }),
-        el('span', { class: 'nome', text: r.entregador + (r.entregador === euSou ? ' (você)' : '') }),
-        el('span', { class: 'hoje', text: `${r.hoje} hoje` }),
-        el('span', { class: 'total', text: `${r.total} no total` }),
-      ]));
-    });
+    alvo.append(cabecalho, linhas);
+    return;
   }
-  alvo.append(cabecalho, linhas);
+
+  ranking.forEach((r, i) => {
+    linhas.append(el('div', { class: 'placar-linha' + (r.entregador === euSou ? ' eu' : '') + (i < 3 ? ' podio' : '') }, [
+      el('span', { class: 'posicao', text: `${i + 1}º` }),
+      el('span', { class: 'nome', text: r.entregador + (r.entregador === euSou ? ' (você)' : '') }),
+      el('span', { class: 'hoje', text: `${r.total} ${r.total === 1 ? 'entrega' : 'entregas'}` }),
+      el('span', { class: 'total', text: r.ultima ? `última ${dataHora(r.ultima)}` : '' }),
+    ]));
+  });
+
+  // Relatório por período, logo abaixo do ranking geral.
+  const bloco = (titulo, campo) => {
+    const ordenado = [...ranking].filter((r) => r[campo] > 0).sort((a, b) => b[campo] - a[campo]);
+    const soma = ordenado.reduce((n, r) => n + r[campo], 0);
+    return el('div', { class: 'relatorio-bloco' }, [
+      el('div', { class: 'relatorio-titulo' }, [
+        el('b', { text: titulo }),
+        el('span', { class: 'relatorio-soma', text: `${soma} ${soma === 1 ? 'entrega' : 'entregas'}` }),
+      ]),
+      ordenado.length
+        ? el('div', {}, ordenado.map((r) => el('div', { class: 'relatorio-linha' + (r.entregador === euSou ? ' eu' : '') }, [
+            el('span', { class: 'nome', text: r.entregador }),
+            el('span', { class: 'qtd', text: String(r[campo]) }),
+          ])))
+        : el('p', { class: 'vazio', text: 'Nenhuma entrega no período.' }),
+    ]);
+  };
+
+  alvo.append(cabecalho, linhas, el('div', { class: 'relatorio' }, [
+    bloco('Esta semana', 'semana'),
+    bloco('Este mês', 'mes'),
+  ]));
 }
 
 function desenhar(quadro, carregar) {

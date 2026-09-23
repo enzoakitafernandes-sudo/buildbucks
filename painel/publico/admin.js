@@ -3,6 +3,7 @@ import { api, dinheiro, dataHora, grupoStatus, el, copiar, exigirSessao, barraTo
 const ROTULO_ENTREGA = { nao_entregue: 'Não entregue', realizando: 'Realizando', entregue: 'Entregue' };
 let pedidos = [];
 let comissoes = [];
+let periodos = null;
 let config = null;
 let filtro = 'todos';
 let busca = '';
@@ -22,6 +23,7 @@ function montar(sessao) {
 
   const numeros = el('section', { class: 'numeros' });
   const painelComissoes = el('section', { class: 'comissoes' });
+  const painelRelatorio = el('section', { class: 'comissoes' });
   const filtros = el('div', { class: 'filtros' });
   const corpoTabela = el('tbody');
   const aviso = el('p', { class: 'aviso', hidden: 'hidden' });
@@ -54,7 +56,9 @@ function montar(sessao) {
     corpoTabela,
   ]);
 
-  document.body.append(el('main', { class: 'conteudo' }, [numeros, aviso, painelComissoes, filtros, el('div', { class: 'rolagem' }, tabela)]));
+  document.body.append(el('main', { class: 'conteudo' }, [
+    numeros, aviso, painelComissoes, filtros, el('div', { class: 'rolagem' }, tabela), painelRelatorio,
+  ]));
 
   const carregar = async (forcar, botao) => {
     if (botao) botao.disabled = true;
@@ -62,6 +66,7 @@ function montar(sessao) {
       const dados = await api('/api/painel/pedidos' + (forcar ? '?atualizar=1' : ''));
       pedidos = dados.pedidos;
       comissoes = dados.comissoes || [];
+      periodos = dados.periodos || null;
       config = dados.config || null;
       const problema = !dados.situacao.token
         ? 'Falta configurar CENTRALCART_TOKEN no servidor: os pedidos abaixo são os da última sincronização.'
@@ -74,6 +79,7 @@ function montar(sessao) {
       desenharNumeros(numeros);
       desenharComissoes(painelComissoes);
       desenharTabela(corpoTabela);
+      desenharRelatorio(painelRelatorio);
     } catch (e) {
       aviso.textContent = e.message;
       aviso.hidden = false;
@@ -86,35 +92,63 @@ function montar(sessao) {
 }
 
 function desenharNumeros(alvo) {
-  const pagos = pedidos.filter((p) => p.status === 'APPROVED');
-  const hoje = new Date().toLocaleDateString('pt-BR');
-  const doDia = pagos.filter((p) => new Date(p.pagoEm || p.criadoEm).toLocaleDateString('pt-BR') === hoje);
-  const desde7 = Date.now() - 7 * 86400000;
-  const semana = pagos.filter((p) => new Date(p.pagoEm || p.criadoEm).getTime() >= desde7);
-  const soma = (l) => l.reduce((n, p) => n + (p.valor || 0), 0);
+  if (!periodos) return;
   const pendentes = pedidos.filter((p) => p.status === 'PENDING');
-  const aEntregar = pagos.filter((p) => p.entrega.estado !== 'entregue');
+  const aEntregar = pedidos.filter((p) => p.status === 'APPROVED' && p.entrega.estado !== 'entregue');
+  const somaPendentes = pendentes.reduce((n, p) => n + (p.valor || 0), 0);
+  const comissaoDevida = comissoes.reduce((n, c) => n + c.comissao, 0);
 
-  alvo.innerHTML = '';
   const cartao = (rotulo, valor, nota, destaque) =>
     el('div', { class: 'numero' + (destaque ? ' destaque' : '') }, [
       el('p', { class: 'rotulo', text: rotulo }),
       el('p', { class: 'valor', text: valor }),
       el('p', { class: 'nota', text: nota }),
     ]);
-  const somaCampo = (lista, campo) => lista.reduce((n, p) => n + (p.financeiro?.[campo] || 0), 0);
-  const comissaoDevida = comissoes.reduce((n, c) => n + c.comissao, 0);
 
   alvo.innerHTML = '';
   alvo.append(
-    cartao('Faturado hoje', dinheiro(soma(doDia)), `${doDia.length} venda(s)`, true),
-    cartao('Lucro hoje', dinheiro(somaCampo(doDia, 'lucro')), `depois de custo e taxas`),
-    cartao('Últimos 7 dias', dinheiro(soma(semana)), `lucro ${dinheiro(somaCampo(semana, 'lucro'))}`),
-    cartao('Total pago', dinheiro(soma(pagos)), `lucro ${dinheiro(somaCampo(pagos, 'lucro'))}`),
-    cartao('Custo dos V-Bucks', dinheiro(somaCampo(pagos, 'custo')), `taxas ${dinheiro(somaCampo(pagos, 'taxa'))}`),
+    cartao('Faturado hoje', dinheiro(periodos.hoje.faturamento), `${periodos.hoje.vendas} venda(s) · lucro ${dinheiro(periodos.hoje.lucro)}`, true),
+    cartao('Esta semana', dinheiro(periodos.semana.faturamento), `${periodos.semana.vendas} venda(s) · lucro ${dinheiro(periodos.semana.lucro)}`),
+    cartao('Este mês', dinheiro(periodos.mes.faturamento), `${periodos.mes.vendas} venda(s) · lucro ${dinheiro(periodos.mes.lucro)}`),
+    cartao('Total pago', dinheiro(periodos.total.faturamento), `${periodos.total.vendas} venda(s) · lucro ${dinheiro(periodos.total.lucro)}`),
+    cartao('Custo dos V-Bucks', dinheiro(periodos.total.custo), `taxas ${dinheiro(periodos.total.taxas)}`),
     cartao('Comissões a pagar', dinheiro(comissaoDevida), 'entregas concluídas'),
-    cartao('Aguardando pagamento', String(pendentes.length), dinheiro(soma(pendentes))),
+    cartao('Aguardando pagamento', String(pendentes.length), dinheiro(somaPendentes)),
     cartao('Falta entregar', String(aEntregar.length), aEntregar.length ? 'pedidos pagos na fila' : 'tudo entregue'),
+  );
+}
+
+function desenharRelatorio(alvo) {
+  alvo.innerHTML = '';
+  if (!periodos) return;
+  const faixas = [
+    ['Hoje', periodos.hoje], ['Esta semana', periodos.semana],
+    ['Este mês', periodos.mes], ['Desde o começo', periodos.total],
+  ];
+  const linha = (rotulo, faixa) => el('tr', {}, [
+    el('td', { text: rotulo }),
+    el('td', { class: 'num', text: String(faixa.vendas) }),
+    el('td', { class: 'num', text: dinheiro(faixa.faturamento) }),
+    el('td', { class: 'num', text: dinheiro(faixa.custo) }),
+    el('td', { class: 'num', text: dinheiro(faixa.taxas) }),
+    el('td', { class: 'num' }, el('b', { class: 'lucro', text: dinheiro(faixa.lucro) })),
+    el('td', { class: 'num', text: dinheiro(faixa.comissao) }),
+    el('td', { class: 'num' }, el('b', { text: dinheiro(faixa.lucroLiquido) })),
+  ]);
+  alvo.append(
+    el('div', { class: 'comissoes-topo' }, [
+      el('b', { text: 'Relatório por período' }),
+      el('span', { class: 'sutil', text: 'semana começa na segunda · mês é o corrente' }),
+    ]),
+    el('div', { class: 'rolagem' }, el('table', { class: 'tabela' }, [
+      el('thead', {}, el('tr', {}, [
+        el('th', { text: 'Período' }), el('th', { class: 'num', text: 'Vendas' }),
+        el('th', { class: 'num', text: 'Faturamento' }), el('th', { class: 'num', text: 'Custo' }),
+        el('th', { class: 'num', text: 'Taxas' }), el('th', { class: 'num', text: 'Lucro' }),
+        el('th', { class: 'num', text: 'Comissões' }), el('th', { class: 'num', text: 'Sobra' }),
+      ])),
+      el('tbody', {}, faixas.map(([rotulo, faixa]) => linha(rotulo, faixa))),
+    ])),
   );
 }
 
@@ -125,8 +159,9 @@ function desenharComissoes(alvo) {
   const linhas = comissoes.map((c) =>
     el('div', { class: 'comissao-linha' }, [
       el('span', { class: 'nome', text: c.entregador }),
-      el('span', { class: 'sutil', text: `${c.entregasHoje} hoje · ${c.entregas} no total` }),
-      el('span', { class: 'hoje', text: dinheiro(c.comissaoHoje) }),
+      el('span', { class: 'sutil', text: `${c.entregas} ${c.entregas === 1 ? 'entrega' : 'entregas'}` }),
+      el('span', { class: 'hoje', text: dinheiro(c.comissaoSemana) }),
+      el('span', { class: 'hoje', text: dinheiro(c.comissaoMes) }),
       el('span', { class: 'valor', text: dinheiro(c.comissao) }),
     ]));
   alvo.append(
@@ -136,7 +171,8 @@ function desenharComissoes(alvo) {
     ]),
     el('div', { class: 'comissoes-cabecalho' }, [
       el('span', { text: 'Entregador' }), el('span', { text: 'Entregas' }),
-      el('span', { class: 'hoje', text: 'Hoje' }), el('span', { class: 'valor', text: 'Total' }),
+      el('span', { class: 'hoje', text: 'Semana' }), el('span', { class: 'hoje', text: 'Mês' }),
+      el('span', { class: 'valor', text: 'Total' }),
     ]),
     ...linhas,
   );
