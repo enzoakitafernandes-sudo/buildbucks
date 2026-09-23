@@ -34,3 +34,7 @@ assets/brtokens/fd3c9a614c2421ea.png
 
 # Imagens originais em alta resolucao (as versoes publicadas estao em assets/).
 originais/
+
+# Dados dos paineis (pedidos e entregas) — ficam no volume do servidor.
+dados/
+dados-teste/

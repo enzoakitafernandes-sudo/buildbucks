@@ -4,6 +4,7 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
+const painel = require('./painel/rotas');
 
 const RAIZ = __dirname;
 const PORTA = Number(process.env.PORT) || 3000;
@@ -30,7 +31,9 @@ const TIPOS = {
 const CACHE_LONGO = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg', '.ico', '.woff2', '.woff', '.mp4']);
 // Texto comprime muito bem (o CSS do tema cai de 193 KB para ~25 KB); imagens e fontes já vêm comprimidas.
 const COMPRIMIVEIS = new Set(['.html', '.css', '.js', '.json', '.txt', '.svg', '.xml']);
+// Pastas/arquivos que o servidor nunca entrega como estático (o painel tem rotas próprias).
 const PRIVADOS = new Set(['/server.js', '/package.json', '/package-lock.json']);
+const PASTAS_PRIVADAS = ['/painel/', '/dados/', '/originais/'];
 
 const SEGURANCA = {
   'X-Content-Type-Options': 'nosniff',
@@ -74,25 +77,39 @@ const paginaErro = (titulo, texto) =>
   `<div><h1 style="margin:0;font-size:3rem">${titulo}</h1><p style="color:#8aa;margin:.5rem 0 1.5rem">${texto}</p>` +
   `<a href="/" style="color:#5ce8ff">Voltar para a loja</a></div>`;
 
-const servidor = http.createServer((req, res) => {
+const servidor = http.createServer(async (req, res) => {
+  const host = String(req.headers.host || '');
+  let rota;
+  try {
+    rota = decodeURIComponent(new URL(req.url, `http://${host || 'localhost'}`).pathname);
+  } catch {
+    return responder(res, 400, paginaErro('400', 'Endereço inválido.'), { 'Content-Type': TIPOS['.html'] });
+  }
+
+  // Painéis (/admin, /entregas e a API deles) antes de qualquer regra de arquivo.
+  try {
+    if (await painel.tratar(req, res, rota)) return;
+  } catch (e) {
+    console.error('[painel] erro:', e);
+    if (!res.headersSent) responder(res, 500, JSON.stringify({ erro: 'Falha interna.' }), { 'Content-Type': 'application/json; charset=utf-8' });
+    return;
+  }
+
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     return responder(res, 405, 'Método não permitido', { Allow: 'GET, HEAD' });
   }
-
-  const host = String(req.headers.host || '');
   // www.buildbucks.com.br -> buildbucks.com.br (um endereço só, melhor para SEO)
   if (host.startsWith('www.')) {
     return responder(res, 301, '', { Location: `https://${host.slice(4)}${req.url}` });
   }
 
-  let caminho;
-  try {
-    caminho = decodeURIComponent(new URL(req.url, `http://${host || 'localhost'}`).pathname);
-  } catch {
-    return responder(res, 400, paginaErro('400', 'Endereço inválido.'), { 'Content-Type': TIPOS['.html'] });
-  }
+  let caminho = rota;
   if (caminho.endsWith('/')) caminho += 'index.html';
-  if (PRIVADOS.has(caminho) || caminho.split('/').some((parte) => parte.startsWith('.'))) {
+  if (
+    PRIVADOS.has(caminho) ||
+    PASTAS_PRIVADAS.some((p) => caminho.startsWith(p)) ||
+    caminho.split('/').some((parte) => parte.startsWith('.'))
+  ) {
     return responder(res, 404, paginaErro('404', 'Página não encontrada.'), { 'Content-Type': TIPOS['.html'] });
   }
 
