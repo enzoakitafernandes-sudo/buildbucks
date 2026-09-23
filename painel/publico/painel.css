@@ -43,6 +43,36 @@ h1,h2,h3{margin:0;font-weight:700;letter-spacing:-.01em}
 .numero.destaque{border-color:rgba(18,200,244,.35);background:linear-gradient(160deg,rgba(18,200,244,.12),var(--cartao))}
 .numero.destaque .valor{color:var(--ciano-claro)}
 
+/* ----- comissões (painel do dono) ----- */
+.comissoes{margin-bottom:1.1rem;border:1px solid var(--borda);border-radius:12px;background:var(--cartao);overflow:hidden}
+.comissoes:empty{display:none}
+.comissoes-topo{display:flex;flex-wrap:wrap;align-items:baseline;gap:.6rem;padding:.75rem .9rem;border-bottom:1px solid var(--borda)}
+.comissoes-cabecalho,.comissao-linha{display:grid;grid-template-columns:1fr auto 7rem 7rem;gap:.6rem;align-items:baseline;padding:.5rem .9rem}
+.comissoes-cabecalho{color:var(--suave);font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;border-bottom:1px solid var(--borda)}
+.comissao-linha+.comissao-linha{border-top:1px solid var(--borda)}
+.comissao-linha .nome{font-weight:600;text-transform:capitalize}
+.comissoes-cabecalho .hoje,.comissoes-cabecalho .valor,.comissao-linha .hoje,.comissao-linha .valor{text-align:right;font-variant-numeric:tabular-nums}
+.comissao-linha .valor{font-weight:700;color:var(--ciano-claro)}
+.tabela .lucro{color:#8ef0b6}
+.tabela .prejuizo{color:#ffa8ab}
+.tabela .comissao-paga{color:var(--ciano-claro);font-weight:600}
+
+/* ----- ranking (painel de entregas) ----- */
+.placar{margin-bottom:1rem;border:1px solid var(--borda);border-radius:12px;background:var(--cartao);overflow:hidden}
+.placar-topo{display:flex;align-items:baseline;gap:.6rem;padding:.7rem .9rem;border-bottom:1px solid var(--borda)}
+.placar-topo b{font-size:.8rem;letter-spacing:.05em;text-transform:uppercase}
+.placar-nota{color:var(--suave);font-size:.68rem}
+.placar-linha{display:grid;grid-template-columns:2.4rem 1fr auto auto;gap:.7rem;align-items:baseline;padding:.5rem .9rem}
+.placar-linha+.placar-linha{border-top:1px solid var(--borda)}
+.placar-linha .posicao{color:var(--suave);font-size:.78rem;font-weight:700}
+.placar-linha.podio .posicao{color:var(--ciano-claro)}
+.placar-linha:first-child .posicao{color:#ffd166}
+.placar-linha .nome{font-weight:600;text-transform:capitalize}
+.placar-linha .hoje{color:var(--ciano-claro);font-size:.8rem;font-weight:700;font-variant-numeric:tabular-nums}
+.placar-linha .total{color:var(--suave);font-size:.74rem;font-variant-numeric:tabular-nums}
+.placar-linha.eu{background:rgba(18,200,244,.08)}
+.placar-linha.eu .nome{color:var(--ciano-claro)}
+
 /* ----- filtros ----- */
 .filtros{display:flex;flex-wrap:wrap;gap:.45rem;margin-bottom:.9rem}
 .filtros button{padding:.42rem .8rem;border:1px solid var(--borda2);border-radius:999px;background:transparent;color:var(--suave);font:inherit;font-size:.74rem;font-weight:600;cursor:pointer}

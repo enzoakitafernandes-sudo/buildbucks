@@ -12,25 +12,32 @@ const ACOES = {
 };
 
 let pedidos = [];
+let ranking = [];
 let ocupado = false;
+let euSou = '';
 
 exigirSessao('entregador', (sessao) => montar(sessao));
 
 function montar(sessao) {
   document.body.className = '';
   document.body.innerHTML = '';
+  euSou = sessao.usuario;
   const aviso = el('p', { class: 'aviso', hidden: 'hidden' });
+  const placar = el('section', { class: 'placar' });
   const quadro = el('section', { class: 'quadro' });
   const btAtualizar = el('button', { class: 'btn', text: 'Atualizar', onclick: (e) => carregar(true, e.target) });
 
   document.body.append(barraTopo(sessao, 'Fila de entregas', [btAtualizar]));
-  document.body.append(el('main', { class: 'conteudo' }, [aviso, quadro]));
+  document.body.append(el('main', { class: 'conteudo' }, [aviso, placar, quadro]));
 
   const carregar = async (forcar, botao) => {
     if (botao) botao.disabled = true;
     try {
       const dados = await api('/api/painel/pedidos' + (forcar ? '?atualizar=1' : ''));
-      pedidos = dados.pedidos;
+      // A fila é só de pedido pago — vale também quando o dono abre esta tela.
+      pedidos = dados.pedidos.filter((p) => p.status === 'APPROVED');
+      ranking = dados.ranking || [];
+      desenharPlacar(placar);
       const problema = !dados.situacao.token
         ? 'O servidor está sem a chave da loja: pedidos novos podem não aparecer.'
         : dados.situacao.falha
@@ -50,6 +57,31 @@ function montar(sessao) {
   carregar(false);
   // Atualiza sozinho, mas nunca no meio de um clique.
   setInterval(() => { if (!ocupado) carregar(false); }, 30000);
+}
+
+const MEDALHAS = ['1º', '2º', '3º'];
+
+function desenharPlacar(alvo) {
+  alvo.innerHTML = '';
+  const cabecalho = el('div', { class: 'placar-topo' }, [
+    el('b', { text: 'Ranking de entregas' }),
+    el('span', { class: 'placar-nota', text: 'atualiza sozinho' }),
+  ]);
+  const linhas = el('div', { class: 'placar-linhas' });
+
+  if (!ranking.length) {
+    linhas.append(el('p', { class: 'vazio', text: 'Nenhuma entrega concluída ainda. O primeiro a entregar abre o ranking.' }));
+  } else {
+    ranking.forEach((r, i) => {
+      linhas.append(el('div', { class: 'placar-linha' + (r.entregador === euSou ? ' eu' : '') + (i < 3 ? ' podio' : '') }, [
+        el('span', { class: 'posicao', text: MEDALHAS[i] || `${i + 1}º` }),
+        el('span', { class: 'nome', text: r.entregador + (r.entregador === euSou ? ' (você)' : '') }),
+        el('span', { class: 'hoje', text: `${r.hoje} hoje` }),
+        el('span', { class: 'total', text: `${r.total} no total` }),
+      ]));
+    });
+  }
+  alvo.append(cabecalho, linhas);
 }
 
 function desenhar(quadro, carregar) {

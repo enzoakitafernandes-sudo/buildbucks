@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const dados = require('./dados');
 const acesso = require('./acesso');
+const financeiro = require('./financeiro');
 
 const PUBLICO = path.join(__dirname, 'publico');
 const TIPOS = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8' };
@@ -45,6 +46,44 @@ function corpo(req, limite = 4096) {
     });
     req.on('error', reject);
   });
+}
+
+const mesmoDia = (iso, referencia) =>
+  !!iso && new Date(iso).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) === referencia;
+
+/** Quem mais entregou: hoje e no total. Só conta pedido concluído. */
+function rankingEntregadores(lista) {
+  const hoje = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+  const por = new Map();
+  for (const p of lista) {
+    const { estado, por: quem, em } = p.entrega || {};
+    if (estado !== 'entregue' || !quem) continue;
+    const reg = por.get(quem) || { entregador: quem, hoje: 0, total: 0, ultima: null };
+    reg.total++;
+    if (mesmoDia(em, hoje)) reg.hoje++;
+    if (!reg.ultima || Date.parse(em) > Date.parse(reg.ultima)) reg.ultima = em;
+    por.set(quem, reg);
+  }
+  // Empate no dia decide pelo total, depois por quem entregou mais recentemente.
+  return [...por.values()].sort((a, b) => b.hoje - a.hoje || b.total - a.total || Date.parse(b.ultima) - Date.parse(a.ultima));
+}
+
+/** Quanto cada entregador tem a receber pelas entregas concluídas. */
+function comissoesPorEntregador(lista) {
+  const hoje = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+  const por = new Map();
+  for (const p of lista) {
+    const { estado, por: quem, em } = p.entrega || {};
+    if (estado !== 'entregue' || !quem || p.status !== 'APPROVED') continue;
+    const reg = por.get(quem) || { entregador: quem, entregas: 0, comissao: 0, entregasHoje: 0, comissaoHoje: 0 };
+    reg.entregas++;
+    reg.comissao += p.financeiro.comissao;
+    if (mesmoDia(em, hoje)) { reg.entregasHoje++; reg.comissaoHoje += p.financeiro.comissao; }
+    por.set(quem, reg);
+  }
+  return [...por.values()]
+    .map((r) => ({ ...r, comissao: Math.round(r.comissao * 100) / 100, comissaoHoje: Math.round(r.comissaoHoje * 100) / 100 }))
+    .sort((a, b) => b.comissao - a.comissao);
 }
 
 /** Trata a requisição se for dos painéis. Devolve true quando tratou. */
@@ -95,11 +134,26 @@ async function tratar(req, res, caminho) {
     const url = new URL(req.url, 'http://local');
     if (dados.temToken()) await dados.sincronizar({ forcar: url.searchParams.get('atualizar') === '1' });
     let lista = dados.pedidos();
-    // Entregador só vê o que já foi pago — não se entrega pedido sem pagamento.
+    const ranking = rankingEntregadores(lista);
+
     if (sessao.perfil === 'entregador') {
-      lista = lista.filter((p) => p.status === 'APPROVED').map((p) => ({ ...p, valor: undefined, email: p.email }));
+      // Entregador só vê o que já foi pago, e sem valores: precisa do que entregar.
+      lista = lista
+        .filter((p) => p.status === 'APPROVED')
+        .map(({ valor, ...resto }) => resto);
+      json(res, 200, { pedidos: lista, ranking, situacao: dados.situacao(), sessao });
+      return true;
     }
-    json(res, 200, { pedidos: lista, situacao: dados.situacao(), sessao });
+
+    lista = lista.map((p) => ({ ...p, financeiro: financeiro.calcular(p) }));
+    json(res, 200, {
+      pedidos: lista,
+      ranking,
+      comissoes: comissoesPorEntregador(lista),
+      config: financeiro.configuracao(),
+      situacao: dados.situacao(),
+      sessao,
+    });
     return true;
   }
 
