@@ -3,6 +3,7 @@ import { api, dinheiro, dataHora, grupoStatus, el, copiar, exigirSessao, barraTo
 const ROTULO_ENTREGA = { nao_entregue: 'Não entregue', realizando: 'Realizando', entregue: 'Entregue' };
 let pedidos = [];
 let comissoes = [];
+let revendedores = [];
 let periodos = null;
 let config = null;
 let filtro = 'todos';
@@ -20,11 +21,13 @@ function montar(sessao) {
     onclick: (e) => carregar(true, e.target),
   });
   const irParaEntregas = el('a', { class: 'btn', href: '/entregas', text: 'Fila de entregas' });
-  document.body.append(barraTopo(sessao, 'Vendas de V-Bucks', [atualizadoEm, irParaEntregas, btAtualizar]));
+  const irParaPagamentos = el('a', { class: 'btn', href: '/pagamentos', text: 'Pagamentos' });
+  document.body.append(barraTopo(sessao, 'Vendas de V-Bucks', [atualizadoEm, irParaPagamentos, irParaEntregas, btAtualizar]));
 
   const numeros = el('section', { class: 'numeros' });
   const painelComissoes = el('section', { class: 'comissoes' });
   const painelRelatorio = el('section', { class: 'comissoes' });
+  const painelRevendedores = el('section', { class: 'comissoes' });
   const filtros = el('div', { class: 'filtros' });
   const corpoTabela = el('tbody');
   const aviso = el('p', { class: 'aviso', hidden: 'hidden' });
@@ -58,7 +61,7 @@ function montar(sessao) {
   ]);
 
   document.body.append(el('main', { class: 'conteudo' }, [
-    numeros, aviso, painelComissoes, filtros, el('div', { class: 'rolagem' }, tabela), painelRelatorio,
+    numeros, aviso, painelComissoes, painelRevendedores, filtros, el('div', { class: 'rolagem' }, tabela), painelRelatorio,
   ]));
 
   const carregar = async (forcar, botao) => {
@@ -67,6 +70,7 @@ function montar(sessao) {
       const dados = await api('/api/painel/pedidos' + (forcar ? '?atualizar=1' : ''));
       pedidos = dados.pedidos;
       comissoes = dados.comissoes || [];
+      revendedores = dados.revendedores || [];
       periodos = dados.periodos || null;
       config = dados.config || null;
       const problema = !dados.situacao.token
@@ -85,6 +89,7 @@ function montar(sessao) {
         : dados.situacao.sincronizadoEm ? 'atualizado ' + dataHora(new Date(dados.situacao.sincronizadoEm).toISOString()) : '';
       desenharNumeros(numeros);
       desenharComissoes(painelComissoes);
+      desenharRevendedores(painelRevendedores);
       desenharTabela(corpoTabela);
       desenharRelatorio(painelRelatorio);
     } catch (e) {
@@ -183,6 +188,105 @@ function desenharComissoes(alvo) {
     ]),
     ...linhas,
   );
+}
+
+/**
+ * Contas a pagar dos revendedores: chave PIX de cada um e o botão que fecha o
+ * saldo. O dinheiro sai por fora, no aplicativo do banco; aqui só fica o
+ * registro de que foi pago, para o saldo zerar e entrar no histórico.
+ */
+function desenharRevendedores(alvo) {
+  // Não redesenha no meio de uma digitação: a tela recarrega sozinha a cada minuto.
+  if (alvo.contains(document.activeElement)) return;
+  alvo.innerHTML = '';
+
+  const aberto = revendedores.reduce((s, c) => s + c.aPagar, 0);
+  alvo.append(el('div', { class: 'comissoes-topo' }, [
+    el('b', { text: 'Revendedores a pagar' }),
+    el('span', { class: 'sutil', text: aberto > 0 ? `${dinheiro(aberto)} em aberto no total` : 'Nenhum saldo em aberto.' }),
+  ]));
+
+  if (!revendedores.length) {
+    alvo.append(el('p', { class: 'vazio', text: 'Nenhum revendedor ainda. Quem concluir uma entrega aparece aqui automaticamente.' }));
+    return;
+  }
+
+  alvo.append(el('div', { class: 'revendedores' }, revendedores.map((c) => cartaoRevendedor(c, alvo))));
+}
+
+function cartaoRevendedor(conta, alvo) {
+  const chave = el('input', {
+    class: 'pix', type: 'text', maxlength: '140', autocomplete: 'off',
+    value: conta.chavePix || '', placeholder: 'CPF, e-mail, telefone ou chave aleatória',
+  });
+  const titular = el('input', {
+    class: 'pix', type: 'text', maxlength: '120', autocomplete: 'off',
+    value: conta.titular || '', placeholder: 'Nome de quem recebe (opcional)',
+  });
+  const recado = el('span', { class: 'sutil' });
+
+  const btSalvar = el('button', {
+    class: 'btn', text: 'Salvar chave',
+    onclick: async (e) => {
+      e.target.disabled = true;
+      try {
+        const r = await api('/api/painel/revendedor', {
+          method: 'POST',
+          body: JSON.stringify({ revendedor: conta.revendedor, chavePix: chave.value, titular: titular.value }),
+        });
+        revendedores = r.revendedores;
+        recado.textContent = chave.value.trim() ? 'chave guardada' : 'chave removida';
+      } catch (ex) {
+        recado.textContent = ex.message;
+      } finally {
+        e.target.disabled = false;
+      }
+    },
+  });
+
+  const btPago = el('button', {
+    class: 'btn btn-principal', text: 'Marcar como pago',
+    disabled: conta.aPagar > 0 ? false : 'disabled',
+    onclick: async (e) => {
+      const aviso = conta.chavePix
+        ? `Chave PIX: ${conta.chavePix}`
+        : 'ATENÇÃO: este revendedor não tem chave PIX cadastrada.';
+      const texto = [
+        `Registrar pagamento de ${dinheiro(conta.aPagar)} para ${conta.revendedor}?`,
+        aviso,
+        `Entregas incluídas: ${conta.entregasAPagar}`,
+        'O dinheiro você envia pelo banco. Aqui o saldo zera e o pagamento entra no histórico.',
+      ].join('\n\n');
+      if (!confirm(texto)) return;
+      e.target.disabled = true;
+      try {
+        const r = await api('/api/painel/pagar', { method: 'POST', body: JSON.stringify({ revendedor: conta.revendedor }) });
+        revendedores = r.revendedores;
+        desenharRevendedores(alvo);
+      } catch (ex) {
+        alert(ex.message);
+        e.target.disabled = false;
+      }
+    },
+  });
+
+  return el('article', { class: 'revendedor' + (conta.aPagar > 0 ? ' devendo' : '') }, [
+    el('div', { class: 'revendedor-topo' }, [
+      el('span', { class: 'nome', text: conta.revendedor }),
+      el('span', { class: 'saldo', text: dinheiro(conta.aPagar) }),
+    ]),
+    el('div', { class: 'revendedor-notas' }, [
+      el('span', { text: `${conta.entregasAPagar} ${conta.entregasAPagar === 1 ? 'entrega a pagar' : 'entregas a pagar'}` }),
+      el('span', { text: `${conta.entregas} no total · já pago ${dinheiro(conta.pago)}` }),
+      conta.ultimoPagamento
+        ? el('span', { text: `último pagamento ${dataHora(conta.ultimoPagamento)}` })
+        : null,
+    ]),
+    el('label', { class: 'campo' }, [el('span', { text: `Chave PIX${conta.tipoPix ? ' · ' + conta.tipoPix : ''}` }), chave]),
+    el('label', { class: 'campo' }, [el('span', { text: 'Titular' }), titular]),
+    el('div', { class: 'revendedor-acoes' }, [btSalvar, btPago]),
+    recado,
+  ]);
 }
 
 function desenharTabela(corpo) {

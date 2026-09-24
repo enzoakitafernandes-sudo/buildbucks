@@ -114,7 +114,12 @@ function registrarErro(ip) {
 const limparTentativas = (ip) => tentativas.delete(ip);
 
 const configurado = () => ADMINS.size > 0 || ADMIN_SENHA.length >= 6 || ENTREGADORES.size > 0;
+/** Nomes dos entregadores cadastrados, sem senha. Só o admin usa, para pagar. */
+const nomesEntregadores = () => [...ENTREGADORES.keys()].sort();
 /** Só a contagem, para conferir se as variáveis foram lidas. Sem nomes nem senhas. */
 const cadastros = () => ({ admins: ADMINS.size, senhaAdminSimples: ADMIN_SENHA.length >= 6, entregadores: ENTREGADORES.size });
 
-module.exports = { COOKIE, emitir, sessao, autenticar, cookieSessao, cookieSaida, podeTentar, registrarErro, limparTentativas, configurado, cadastros };
+module.exports = {
+  COOKIE, emitir, sessao, autenticar, cookieSessao, cookieSaida,
+  podeTentar, registrarErro, limparTentativas, configurado, cadastros, nomesEntregadores,
+};

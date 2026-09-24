@@ -29,12 +29,16 @@ function arquivo(res, nome) {
 
 function corpo(req, limite = 4096) {
   return new Promise((resolve, reject) => {
-    let texto = '';
+    // Junta os pedaços como bytes: decodificar cada pedaço sozinho estraga
+    // um acento que caia bem na divisa entre dois pacotes.
+    const partes = [];
+    let tamanho = 0;
     let excedeu = false;
     req.on('data', (p) => {
       if (excedeu) return;
-      texto += p;
-      if (texto.length > limite) {
+      partes.push(p);
+      tamanho += p.length;
+      if (tamanho > limite) {
         // Descarta o resto sem derrubar a conexão, para conseguir responder o erro.
         excedeu = true;
         req.resume();
@@ -42,7 +46,10 @@ function corpo(req, limite = 4096) {
       }
     });
     req.on('end', () => {
-      try { resolve(texto ? JSON.parse(texto) : {}); } catch { reject(new Error('json inválido')); }
+      try {
+        const texto = Buffer.concat(partes).toString('utf8');
+        resolve(texto ? JSON.parse(texto) : {});
+      } catch { reject(new Error('json inválido')); }
     });
     req.on('error', reject);
   });
@@ -139,11 +146,71 @@ function resumoPorPeriodo(lista) {
   return { ...r, referencia: m };
 }
 
+/**
+ * Conta de cada revendedor: quanto já ganhou, quanto ainda está em aberto e
+ * quanto já recebeu. O que foi pago vem do histórico de pagamentos, não do
+ * cálculo de comissão — se a tabela de custos mudar depois, o que saiu do
+ * bolso continua registrado pelo valor real.
+ */
+function contasRevendedores(lista, cadastro, nomes, historico) {
+  const por = new Map();
+  const garante = (nome) => {
+    if (!por.has(nome)) {
+      const dadosPix = cadastro[nome] || {};
+      por.set(nome, {
+        revendedor: nome,
+        entregas: 0, ganho: 0,
+        aPagar: 0, entregasAPagar: 0, pedidosAPagar: [],
+        pago: 0, pagamentos: 0, ultimoPagamento: null,
+        chavePix: dadosPix.chavePix || null,
+        tipoPix: dadosPix.tipo || null,
+        titular: dadosPix.titular || null,
+      });
+    }
+    return por.get(nome);
+  };
+
+  // Quem está cadastrado aparece na lista mesmo sem nenhuma entrega ainda.
+  for (const nome of nomes) garante(nome);
+  for (const nome of Object.keys(cadastro)) garante(nome);
+
+  for (const p of lista) {
+    const entrega = p.entrega || {};
+    if (entrega.estado !== 'entregue' || !entrega.por || p.status !== 'APPROVED') continue;
+    const conta = garante(entrega.por);
+    conta.entregas++;
+    conta.ganho += p.financeiro.comissao;
+    if (entrega.pagamento) continue;
+    conta.aPagar += p.financeiro.comissao;
+    conta.entregasAPagar++;
+    conta.pedidosAPagar.push(p.id);
+  }
+
+  for (const pagamento of historico) {
+    const conta = garante(pagamento.revendedor);
+    conta.pago += pagamento.valor;
+    conta.pagamentos++;
+    if (!conta.ultimoPagamento || Date.parse(pagamento.criadoEm) > Date.parse(conta.ultimoPagamento)) {
+      conta.ultimoPagamento = pagamento.criadoEm;
+    }
+  }
+
+  return [...por.values()]
+    .map((c) => ({ ...c, ganho: centavos(c.ganho), aPagar: centavos(c.aPagar), pago: centavos(c.pago) }))
+    // Quem tem saldo em aberto primeiro: é quem espera receber.
+    .sort((a, b) => b.aPagar - a.aPagar || b.ganho - a.ganho || a.revendedor.localeCompare(b.revendedor));
+}
+
+/** Junta pedidos e comissão uma vez só, para reaproveitar entre as rotas. */
+const comFinanceiro = () => dados.pedidos().map((p) => ({ ...p, financeiro: financeiro.calcular(p) }));
+
+const contasAgora = () => contasRevendedores(comFinanceiro(), dados.revendedores(), acesso.nomesEntregadores(), dados.pagamentos());
 /** Trata a requisição se for dos painéis. Devolve true quando tratou. */
 async function tratar(req, res, caminho) {
   // Páginas
   if (caminho === '/admin' || caminho === '/admin/') { arquivo(res, 'admin.html'); return true; }
   if (caminho === '/entregas' || caminho === '/entregas/') { arquivo(res, 'entregas.html'); return true; }
+  if (caminho === '/pagamentos' || caminho === '/pagamentos/') { arquivo(res, 'pagamentos.html'); return true; }
   if (caminho.startsWith('/painel/') && /\.(css|js)$/.test(caminho)) { arquivo(res, path.basename(caminho)); return true; }
   if (!caminho.startsWith('/api/painel/')) return false;
 
@@ -203,10 +270,57 @@ async function tratar(req, res, caminho) {
       ranking,
       comissoes: comissoesPorEntregador(lista),
       periodos: resumoPorPeriodo(lista),
+      revendedores: contasRevendedores(lista, dados.revendedores(), acesso.nomesEntregadores(), dados.pagamentos()),
       config: financeiro.configuracao(),
       situacao: dados.situacao(),
       sessao,
     });
+    return true;
+  }
+
+  // Daqui para baixo é só do dono: dinheiro e chave PIX não são assunto de entregador.
+  const soAdmin = () => {
+    if (sessao.perfil === 'admin') return false;
+    json(res, 403, { erro: 'Só o administrador pode ver esta parte.' });
+    return true;
+  };
+
+  if (caminho === '/api/painel/pagamentos' && req.method === 'GET') {
+    if (soAdmin()) return true;
+    json(res, 200, { pagamentos: dados.pagamentos(), revendedores: contasAgora(), situacao: dados.situacao(), sessao });
+    return true;
+  }
+
+  if (caminho === '/api/painel/revendedor' && req.method === 'POST') {
+    if (soAdmin()) return true;
+    let corpoPix;
+    try { corpoPix = await corpo(req); } catch (e) { json(res, e.grande ? 413 : 400, { erro: e.grande ? e.message : 'Requisição inválida.' }); return true; }
+    try {
+      dados.salvarRevendedor(corpoPix.revendedor, { chavePix: corpoPix.chavePix, titular: corpoPix.titular }, sessao.usuario);
+      json(res, 200, { ok: true, revendedores: contasAgora() });
+    } catch (e) {
+      json(res, 400, { erro: e.message });
+    }
+    return true;
+  }
+
+  if (caminho === '/api/painel/pagar' && req.method === 'POST') {
+    if (soAdmin()) return true;
+    let pedidoPagamento;
+    try { pedidoPagamento = await corpo(req); } catch (e) { json(res, e.grande ? 413 : 400, { erro: e.grande ? e.message : 'Requisição inválida.' }); return true; }
+    const nome = String(pedidoPagamento.revendedor || '').trim().toLowerCase();
+    // O valor e as entregas saem daqui, nunca do que a tela mandou.
+    const conta = contasAgora().find((c) => c.revendedor === nome);
+    if (!conta || conta.aPagar <= 0) { json(res, 400, { erro: 'Esse revendedor não tem saldo em aberto.' }); return true; }
+    try {
+      const pagamento = dados.registrarPagamento(
+        { revendedor: nome, pedidos: conta.pedidosAPagar, valor: conta.aPagar, observacao: pedidoPagamento.observacao },
+        sessao.usuario,
+      );
+      json(res, 200, { ok: true, pagamento, revendedores: contasAgora() });
+    } catch (e) {
+      json(res, 400, { erro: e.message });
+    }
     return true;
   }
 

@@ -8,6 +8,7 @@
 // nunca é consultado de novo.
 const fs = require('node:fs');
 const path = require('node:path');
+const crypto = require('node:crypto');
 
 const API = 'https://api.centralcart.io/v1';
 const TOKEN = process.env.CENTRALCART_TOKEN || '';
@@ -23,14 +24,15 @@ const IDS_VBUCKS = new Set(
 const ESTADOS = ['nao_entregue', 'realizando', 'entregue'];
 const INTERVALO_SYNC_MS = 30_000;
 
-let estado = { pedidos: {}, entregas: {}, ignorados: {}, sincronizadoEm: 0 };
+const vazio = () => ({ pedidos: {}, entregas: {}, ignorados: {}, revendedores: {}, pagamentos: {}, sincronizadoEm: 0 });
+let estado = vazio();
 let sincronizando = null;
 let ultimaFalha = null;
 
 function carregar() {
   try {
     fs.mkdirSync(PASTA, { recursive: true });
-    if (fs.existsSync(ARQUIVO)) estado = { ignorados: {}, ...JSON.parse(fs.readFileSync(ARQUIVO, 'utf8')) };
+    if (fs.existsSync(ARQUIVO)) estado = { ...vazio(), ...JSON.parse(fs.readFileSync(ARQUIVO, 'utf8')) };
   } catch (e) {
     console.error('[painel] não consegui ler o arquivo de dados:', e.message);
   }
@@ -185,10 +187,93 @@ function pedidos() {
 function marcarEntrega(id, novoEstado, quem) {
   if (!ESTADOS.includes(novoEstado)) throw new Error('estado inválido');
   if (!estado.pedidos[id]) throw new Error('pedido não encontrado');
-  estado.entregas[id] = { estado: novoEstado, por: quem, em: new Date().toISOString() };
+  const antes = estado.entregas[id] || {};
+  // O vínculo com o pagamento fica preso ao pedido: reabrir uma entrega já paga
+  // não devolve a comissão ao saldo, senão o mesmo pedido seria pago duas vezes.
+  estado.entregas[id] = { estado: novoEstado, por: quem, em: new Date().toISOString(), pagamento: antes.pagamento || null };
   gravar();
   return estado.entregas[id];
 }
+
+const soDigitos = (s) => [...s].filter((c) => c >= '0' && c <= '9').join('');
+
+/** Só para mostrar na tela qual é o tipo da chave; não valida a chave. */
+function tipoDaChave(bruta) {
+  const chave = bruta.trim();
+  if (chave.includes('@')) return 'E-mail';
+  if (chave.length === 36 && chave.split('-').length === 5) return 'Chave aleatória';
+  const digitos = soDigitos(chave);
+  if (chave.startsWith('+') && digitos.length >= 12) return 'Telefone';
+  if (digitos.length === 11 && digitos === chave) return 'CPF';
+  if (digitos.length === 14) return 'CNPJ';
+  if (digitos.length === 10 || digitos.length === 11) return 'Telefone';
+  return 'Chave';
+}
+
+/** Guarda (ou apaga, se vier em branco) a chave PIX de um revendedor. */
+function salvarRevendedor(nome, { chavePix, titular }, por) {
+  const chave = String(nome || '').trim().toLowerCase();
+  if (!chave) throw new Error('revendedor não informado');
+  const pix = String(chavePix || '').trim();
+  if (pix.length > 140) throw new Error('chave PIX longa demais');
+  if ([...pix].some((c) => c.charCodeAt(0) < 32)) throw new Error('chave PIX inválida');
+
+  if (!pix) delete estado.revendedores[chave];
+  else {
+    estado.revendedores[chave] = {
+      chavePix: pix,
+      tipo: tipoDaChave(pix),
+      titular: String(titular || '').trim().slice(0, 120),
+      atualizadoEm: new Date().toISOString(),
+      atualizadoPor: por || null,
+    };
+  }
+  gravar();
+  return estado.revendedores[chave] || null;
+}
+
+/**
+ * Fecha o saldo de um revendedor: guarda quanto foi pago, com qual chave e
+ * quais entregas entraram, e marca essas entregas como pagas. O dinheiro sai
+ * por fora, na mão; aqui fica só o registro.
+ */
+function registrarPagamento({ revendedor, pedidos: ids, valor, observacao }, por) {
+  const nome = String(revendedor || '').trim().toLowerCase();
+  if (!nome) throw new Error('revendedor não informado');
+  if (!Array.isArray(ids) || !ids.length) throw new Error('esse revendedor não tem saldo em aberto');
+
+  for (const id of ids) {
+    const entrega = estado.entregas[id];
+    if (!entrega) throw new Error(`entrega ${id} não encontrada`);
+    if (entrega.pagamento) throw new Error(`a entrega ${id} já foi paga`);
+    if (entrega.por !== nome) throw new Error(`a entrega ${id} não é de ${nome}`);
+  }
+
+  const cadastro = estado.revendedores[nome] || {};
+  const pagamento = {
+    id: crypto.randomUUID(),
+    revendedor: nome,
+    valor: Math.round(Number(valor) * 100) / 100,
+    entregas: ids.length,
+    pedidos: ids,
+    chavePix: cadastro.chavePix || null,
+    tipoPix: cadastro.tipo || null,
+    titular: cadastro.titular || null,
+    observacao: String(observacao || '').trim().slice(0, 200),
+    criadoEm: new Date().toISOString(),
+    por: por || null,
+  };
+  if (!Number.isFinite(pagamento.valor) || pagamento.valor <= 0) throw new Error('valor inválido');
+
+  estado.pagamentos[pagamento.id] = pagamento;
+  for (const id of ids) estado.entregas[id].pagamento = pagamento.id;
+  gravar();
+  return pagamento;
+}
+
+const revendedores = () => ({ ...estado.revendedores });
+/** Histórico do mais novo para o mais antigo. */
+const pagamentos = () => Object.values(estado.pagamentos).sort((a, b) => Date.parse(b.criadoEm) - Date.parse(a.criadoEm));
 
 /**
  * Espera a sincronização no máximo alguns segundos e devolve o que já está
@@ -216,4 +301,7 @@ const situacao = () => ({
 // Já começa a buscar na partida, para o painel encontrar os pedidos prontos.
 if (temToken()) sincronizar();
 
-module.exports = { sincronizar, sincronizarComLimite, pedidos, marcarEntrega, situacao, ESTADOS, temToken };
+module.exports = {
+  sincronizar, sincronizarComLimite, pedidos, marcarEntrega, situacao, ESTADOS, temToken,
+  salvarRevendedor, registrarPagamento, revendedores, pagamentos,
+};
