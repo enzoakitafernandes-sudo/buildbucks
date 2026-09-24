@@ -46,7 +46,10 @@ function montar(sessao) {
         ? 'O servidor está sem a chave da loja: pedidos novos podem não aparecer.'
         : dados.situacao.falha
           ? 'A loja não respondeu na última atualização. A fila abaixo pode estar desatualizada.'
-          : '';
+          : dados.situacao.sincronizando
+            // Fila vazia por estar carregando é diferente de fila vazia de verdade.
+            ? 'Buscando os pedidos na loja… a fila se completa sozinha em alguns segundos.'
+            : '';
       aviso.textContent = problema;
       aviso.hidden = !problema;
       desenhar(quadro, carregar);

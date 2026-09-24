@@ -190,8 +190,22 @@ function marcarEntrega(id, novoEstado, quem) {
   return estado.entregas[id];
 }
 
+/**
+ * Espera a sincronização no máximo alguns segundos e devolve o que já está
+ * guardado se ela demorar. A varredura continua por trás e a tela, que recarrega
+ * sozinha a cada 30s, mostra os pedidos novos assim que chegam. Sem isso o
+ * painel fica em branco até a loja responder — quase um minuto quando a memória
+ * está vazia depois de um reinício.
+ */
+function sincronizarComLimite(opcoes, limiteMs = 3000) {
+  let relogio;
+  const espera = new Promise((pronto) => { relogio = setTimeout(() => pronto({ ok: true, andamento: true }), limiteMs); });
+  return Promise.race([sincronizar(opcoes).finally(() => clearTimeout(relogio)), espera]);
+}
+
 const situacao = () => ({
   token: temToken(),
+  sincronizando: Boolean(sincronizando),
   pasta: PASTA,
   partidas, // continua 1 depois de vários deploys = o disco está sendo zerado
   sincronizadoEm: estado.sincronizadoEm,
@@ -199,4 +213,7 @@ const situacao = () => ({
   total: Object.keys(estado.pedidos).length,
 });
 
-module.exports = { sincronizar, pedidos, marcarEntrega, situacao, ESTADOS, temToken };
+// Já começa a buscar na partida, para o painel encontrar os pedidos prontos.
+if (temToken()) sincronizar();
+
+module.exports = { sincronizar, sincronizarComLimite, pedidos, marcarEntrega, situacao, ESTADOS, temToken };

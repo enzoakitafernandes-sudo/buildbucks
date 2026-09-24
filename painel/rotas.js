@@ -184,7 +184,7 @@ async function tratar(req, res, caminho) {
   if (caminho === '/api/painel/pedidos' && req.method === 'GET') {
     // Sem token só não dá para buscar pedidos novos; o que já foi salvo continua à vista.
     const url = new URL(req.url, 'http://local');
-    if (dados.temToken()) await dados.sincronizar({ forcar: url.searchParams.get('atualizar') === '1' });
+    if (dados.temToken()) await dados.sincronizarComLimite({ forcar: url.searchParams.get('atualizar') === '1' });
     let lista = dados.pedidos();
     const ranking = rankingEntregadores(lista);
 

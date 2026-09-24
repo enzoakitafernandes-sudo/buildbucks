@@ -80,7 +80,9 @@ function montar(sessao) {
             : '';
       aviso.textContent = problema;
       aviso.hidden = !problema;
-      atualizadoEm.textContent = dados.situacao.sincronizadoEm ? 'atualizado ' + dataHora(new Date(dados.situacao.sincronizadoEm).toISOString()) : '';
+      atualizadoEm.textContent = dados.situacao.sincronizando
+        ? 'buscando pedidos na loja…'
+        : dados.situacao.sincronizadoEm ? 'atualizado ' + dataHora(new Date(dados.situacao.sincronizadoEm).toISOString()) : '';
       desenharNumeros(numeros);
       desenharComissoes(painelComissoes);
       desenharTabela(corpoTabela);
