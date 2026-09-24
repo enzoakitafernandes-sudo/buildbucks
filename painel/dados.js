@@ -36,6 +36,7 @@ function carregar() {
   }
 }
 carregar();
+console.log(`[painel] dados em ${ARQUIVO}: ${fs.existsSync(ARQUIVO) ? Object.keys(estado.pedidos).length + ' pedidos guardados' : 'arquivo ainda não existe'}`);
 
 let gravacaoPendente = null;
 function gravar() {
@@ -179,6 +180,7 @@ function marcarEntrega(id, novoEstado, quem) {
 const situacao = () => ({
   token: temToken(),
   pasta: PASTA,
+  arquivo: fs.existsSync(ARQUIVO), // false depois de reiniciar = o disco nao esta guardando nada
   sincronizadoEm: estado.sincronizadoEm,
   falha: ultimaFalha,
   total: Object.keys(estado.pedidos).length,

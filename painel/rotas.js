@@ -150,8 +150,11 @@ async function tratar(req, res, caminho) {
   const sessao = acesso.sessao(req);
 
   if (caminho === '/api/painel/sessao' && req.method === 'GET') {
-    // Sem lista de usuários aqui: nomes de login não precisam ser públicos.
-    json(res, 200, { sessao, configurado: acesso.configurado(), cadastros: acesso.cadastros(), loja: dados.situacao() });
+    // Sem sessão a resposta é mínima: a tela de login só precisa saber se o
+    // servidor tem senha configurada. O resto é assunto de quem já entrou.
+    json(res, 200, sessao
+      ? { sessao, configurado: true, cadastros: acesso.cadastros(), loja: dados.situacao() }
+      : { sessao: null, configurado: acesso.configurado() });
     return true;
   }
 
