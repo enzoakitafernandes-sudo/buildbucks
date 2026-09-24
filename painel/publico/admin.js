@@ -73,7 +73,11 @@ function montar(sessao) {
         ? 'Falta configurar CENTRALCART_TOKEN no servidor: os pedidos abaixo são os da última sincronização.'
         : dados.situacao.falha
           ? `A loja não respondeu na última tentativa (${dados.situacao.falha}). Mostrando o que já foi lido.`
-          : '';
+          : dados.situacao.partidas === 1
+            // O servidor já reiniciou várias vezes; se a contagem não sobe, o disco
+            // volta vazio e leva junto as entregas marcadas e o ranking.
+            ? 'O disco ainda não confirmou que guarda os dados entre reinícios. Se este aviso continuar depois do próximo deploy, o volume do Railway não está ligado em /data e as entregas marcadas se perdem a cada publicação.'
+            : '';
       aviso.textContent = problema;
       aviso.hidden = !problema;
       atualizadoEm.textContent = dados.situacao.sincronizadoEm ? 'atualizado ' + dataHora(new Date(dados.situacao.sincronizadoEm).toISOString()) : '';
