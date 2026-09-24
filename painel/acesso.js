@@ -13,12 +13,18 @@ const VALIDADE_MS = 12 * 60 * 60 * 1000;
 const PASTA = process.env.DATA_DIR || path.join(__dirname, '..', 'dados');
 
 const ADMIN_SENHA = process.env.ADMIN_SENHA || '';
+// Aceita o valor com aspas, espaços ou quebras de linha em volta — erro comum
+// ao colar no painel do servidor.
+const limpar = (s) => String(s || '').trim().replace(/^["']|["']$/g, '').trim();
 const lista = (valor) => new Map(
-  (valor || '')
+  limpar(valor)
     .split(',')
-    .map((par) => par.split(':'))
-    .filter(([nome, senha]) => nome?.trim() && senha?.trim())
-    .map(([nome, senha]) => [nome.trim().toLowerCase(), senha.trim()]),
+    .map((par) => {
+      const corte = par.indexOf(':'); // senha pode conter ":"
+      return corte < 0 ? [] : [limpar(par.slice(0, corte)), limpar(par.slice(corte + 1))];
+    })
+    .filter(([nome, senha]) => nome && senha)
+    .map(([nome, senha]) => [nome.toLowerCase(), senha]),
 );
 const ADMINS = lista(process.env.ADMINS);
 const ENTREGADORES = lista(process.env.ENTREGADORES);
@@ -108,5 +114,7 @@ function registrarErro(ip) {
 const limparTentativas = (ip) => tentativas.delete(ip);
 
 const configurado = () => ADMINS.size > 0 || ADMIN_SENHA.length >= 6 || ENTREGADORES.size > 0;
+/** Só a contagem, para conferir se as variáveis foram lidas. Sem nomes nem senhas. */
+const cadastros = () => ({ admins: ADMINS.size, senhaAdminSimples: ADMIN_SENHA.length >= 6, entregadores: ENTREGADORES.size });
 
-module.exports = { COOKIE, emitir, sessao, autenticar, cookieSessao, cookieSaida, podeTentar, registrarErro, limparTentativas, configurado };
+module.exports = { COOKIE, emitir, sessao, autenticar, cookieSessao, cookieSaida, podeTentar, registrarErro, limparTentativas, configurado, cadastros };

@@ -151,7 +151,7 @@ async function tratar(req, res, caminho) {
 
   if (caminho === '/api/painel/sessao' && req.method === 'GET') {
     // Sem lista de usuários aqui: nomes de login não precisam ser públicos.
-    json(res, 200, { sessao, configurado: acesso.configurado(), loja: dados.situacao() });
+    json(res, 200, { sessao, configurado: acesso.configurado(), cadastros: acesso.cadastros(), loja: dados.situacao() });
     return true;
   }
 
