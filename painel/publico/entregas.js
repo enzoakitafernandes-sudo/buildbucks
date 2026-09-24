@@ -26,8 +26,12 @@ function montar(sessao) {
   const placar = el('section', { class: 'placar' });
   const quadro = el('section', { class: 'quadro' });
   const btAtualizar = el('button', { class: 'btn', text: 'Atualizar', onclick: (e) => carregar(true, e.target) });
+  // O dono também usa esta tela; o atalho leva de volta ao painel de vendas.
+  const extras = sessao.perfil === 'admin'
+    ? [el('a', { class: 'btn', href: '/admin', text: 'Painel de vendas' }), btAtualizar]
+    : [btAtualizar];
 
-  document.body.append(barraTopo(sessao, 'Fila de entregas', [btAtualizar]));
+  document.body.append(barraTopo(sessao, 'Fila de entregas', extras));
   document.body.append(el('main', { class: 'conteudo' }, [aviso, placar, quadro]));
 
   const carregar = async (forcar, botao) => {

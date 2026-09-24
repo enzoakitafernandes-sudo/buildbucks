@@ -14,7 +14,7 @@ h1,h2,h3{margin:0;font-weight:700;letter-spacing:-.01em}
 .topo h1{font-size:1rem;text-transform:uppercase;letter-spacing:.08em}
 .topo .espaco{flex:1}
 .topo .quem{color:var(--suave);font-size:.78rem}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.5rem .85rem;border:1px solid var(--borda2);border-radius:8px;background:#ffffff0a;color:var(--texto);font:inherit;font-size:.76rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;transition:background .2s,border-color .2s}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.5rem .85rem;border:1px solid var(--borda2);border-radius:8px;background:#ffffff0a;color:var(--texto);font:inherit;font-size:.76rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;text-decoration:none;white-space:nowrap;cursor:pointer;transition:background .2s,border-color .2s}
 .btn:hover{background:#ffffff14;border-color:#ffffff40}
 .btn[disabled]{opacity:.5;cursor:progress}
 .btn-principal{border-color:transparent;background:linear-gradient(105deg,#078ed8,#16c9f3 45%,#8df4ff);color:#04131c}

@@ -19,7 +19,8 @@ function montar(sessao) {
     class: 'btn', text: 'Atualizar',
     onclick: (e) => carregar(true, e.target),
   });
-  document.body.append(barraTopo(sessao, 'Vendas de V-Bucks', [atualizadoEm, btAtualizar]));
+  const irParaEntregas = el('a', { class: 'btn', href: '/entregas', text: 'Fila de entregas' });
+  document.body.append(barraTopo(sessao, 'Vendas de V-Bucks', [atualizadoEm, irParaEntregas, btAtualizar]));
 
   const numeros = el('section', { class: 'numeros' });
   const painelComissoes = el('section', { class: 'comissoes' });
