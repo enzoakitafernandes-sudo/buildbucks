@@ -1,7 +1,8 @@
 // Login dos painéis. Sem banco: as senhas ficam em variáveis de ambiente e a
 // sessão é um cookie assinado (HMAC), com validade de 12 horas.
 //
-//   ADMIN_SENHA=uma-senha-forte
+//   ADMINS=eznoclean:senha1,outro:senha2    (donos, com nome próprio)
+//   ADMIN_SENHA=uma-senha-forte             (login simples pelo usuário "admin")
 //   ENTREGADORES=joao:senha1,maria:senha2
 const crypto = require('node:crypto');
 const fs = require('node:fs');
@@ -12,13 +13,15 @@ const VALIDADE_MS = 12 * 60 * 60 * 1000;
 const PASTA = process.env.DATA_DIR || path.join(__dirname, '..', 'dados');
 
 const ADMIN_SENHA = process.env.ADMIN_SENHA || '';
-const ENTREGADORES = new Map(
-  (process.env.ENTREGADORES || '')
+const lista = (valor) => new Map(
+  (valor || '')
     .split(',')
     .map((par) => par.split(':'))
     .filter(([nome, senha]) => nome?.trim() && senha?.trim())
     .map(([nome, senha]) => [nome.trim().toLowerCase(), senha.trim()]),
 );
+const ADMINS = lista(process.env.ADMINS);
+const ENTREGADORES = lista(process.env.ENTREGADORES);
 
 // Segredo das assinaturas: gerado uma vez e guardado junto dos dados, para as
 // sessões sobreviverem a um reinício.
@@ -73,6 +76,8 @@ function sessao(req) {
 function autenticar(usuario, senha) {
   const nome = String(usuario || '').trim().toLowerCase();
   const chave = String(senha || '');
+  const senhaAdmin = ADMINS.get(nome);
+  if (senhaAdmin && iguais(chave, senhaAdmin)) return { perfil: 'admin', usuario: nome };
   if (ADMIN_SENHA && (nome === 'admin' || !nome) && iguais(chave, ADMIN_SENHA)) return { perfil: 'admin', usuario: 'admin' };
   const senhaEntregador = ENTREGADORES.get(nome);
   if (senhaEntregador && iguais(chave, senhaEntregador)) return { perfil: 'entregador', usuario: nome };
@@ -102,7 +107,6 @@ function registrarErro(ip) {
 }
 const limparTentativas = (ip) => tentativas.delete(ip);
 
-const configurado = () => ADMIN_SENHA.length >= 6 || ENTREGADORES.size > 0;
-const entregadores = () => [...ENTREGADORES.keys()];
+const configurado = () => ADMINS.size > 0 || ADMIN_SENHA.length >= 6 || ENTREGADORES.size > 0;
 
-module.exports = { COOKIE, emitir, sessao, autenticar, cookieSessao, cookieSaida, podeTentar, registrarErro, limparTentativas, configurado, entregadores };
+module.exports = { COOKIE, emitir, sessao, autenticar, cookieSessao, cookieSaida, podeTentar, registrarErro, limparTentativas, configurado };

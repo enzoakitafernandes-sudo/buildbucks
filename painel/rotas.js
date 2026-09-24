@@ -150,12 +150,8 @@ async function tratar(req, res, caminho) {
   const sessao = acesso.sessao(req);
 
   if (caminho === '/api/painel/sessao' && req.method === 'GET') {
-    json(res, 200, {
-      sessao,
-      configurado: acesso.configurado(),
-      entregadores: acesso.entregadores(),
-      loja: dados.situacao(),
-    });
+    // Sem lista de usuários aqui: nomes de login não precisam ser públicos.
+    json(res, 200, { sessao, configurado: acesso.configurado(), loja: dados.situacao() });
     return true;
   }
 
